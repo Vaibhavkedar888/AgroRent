@@ -18,6 +18,7 @@ D:\PROJECT\krushak\backend\src\main\java\com\farming\rental\entity\OTPVerificati
 D:\PROJECT\krushak\backend\src\main\java\com\farming\rental\entity\Review.java
 D:\PROJECT\krushak\backend\src\main\java\com\farming\rental\repository\EquipmentRepository.java
 D:\PROJECT\krushak\backend\src\main\java\com\farming\rental\config\SecurityConfig.java
+D:\PROJECT\krushak\backend\src\main\java\com\farming\rental\service\EmailService.java
 D:\PROJECT\krushak\backend\src\main\java\com\farming\rental\exception\GlobalExceptionHandler.java
 D:\PROJECT\krushak\backend\src\main\java\com\farming\rental\controller\api\AuthApiController.java
 D:\PROJECT\krushak\backend\src\main\java\com\farming\rental\entity\User.java

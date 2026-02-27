@@ -83,8 +83,16 @@ public class AuthApiController {
                 return ResponseEntity.badRequest().body(Map.of("error", "User already exists"));
             }
             User user = userService.registerUser(dto);
-            otpService.generateOTP(user.getPhoneNumber());
-            return ResponseEntity.ok(Map.of("message", "Registered successfully. Please verify OTP.", "user", user));
+            // Send OTP to the email provided during registration
+            otpService.generateOTPForRegistration(
+                user.getPhoneNumber(),
+                user.getEmail(),
+                user.getFullName()
+            );
+            return ResponseEntity.ok(Map.of(
+                "message", "Registered successfully. OTP sent to your email: " + user.getEmail(),
+                "user", user
+            ));
         } catch (Exception e) {
             log.error("Registration failed", e);
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));

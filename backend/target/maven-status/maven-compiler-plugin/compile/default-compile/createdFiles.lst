@@ -29,6 +29,7 @@ com\farming\rental\repository\UserRepository.class
 com\farming\rental\controller\api\UserApiController.class
 com\farming\rental\service\SchemeService.class
 com\farming\rental\config\DataSeeder.class
+com\farming\rental\service\EmailService.class
 com\farming\rental\entity\Booking$RentalType.class
 com\farming\rental\controller\api\OwnerApiController.class
 com\farming\rental\controller\api\SchemeApiController.class
