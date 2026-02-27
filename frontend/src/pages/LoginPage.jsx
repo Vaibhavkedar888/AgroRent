@@ -13,13 +13,15 @@ const LoginPage = () => {
     const [step, setStep] = useState('PHONE'); // PHONE or OTP
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [sentEmail, setSentEmail] = useState('');
 
     const handleRequestOtp = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError('');
         try {
-            await api.post('/api/auth/login', null, { params: { phoneNumber } });
+            const res = await api.post('/api/auth/login', null, { params: { phoneNumber } });
+            setSentEmail(res.data.email || 'your registered email');
             setStep('OTP');
         } catch (err) {
             setError(err.response?.data?.error || 'Failed to send OTP. Please try again.');
@@ -67,7 +69,9 @@ const LoginPage = () => {
                         Welcome Back
                     </h2>
                     <p className="mt-2 text-sm text-gray-600">
-                        {step === 'PHONE' ? 'Sign in to access your account' : 'Enter the OTP sent to your phone'}
+                        {step === 'PHONE'
+                            ? 'Sign in to access your account'
+                            : `OTP sent to ${sentEmail} — check your inbox`}
                     </p>
                 </div>
 

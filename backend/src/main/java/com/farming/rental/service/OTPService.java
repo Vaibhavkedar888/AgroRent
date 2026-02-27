@@ -155,4 +155,23 @@ public class OTPService {
     public Optional<OTPVerification> getOTPStatus(String phoneNumber) {
         return otpRepository.findByPhoneNumber(phoneNumber);
     }
+
+    /**
+     * Returns a masked email like u***@gmail.com for UI display
+     */
+    public String getMaskedEmail(String phoneNumber) {
+        return userRepository.findByPhoneNumber(phoneNumber)
+            .map(user -> {
+                String email = user.getEmail();
+                if (email == null || !email.contains("@")) return "your registered email";
+                int atIdx = email.indexOf('@');
+                String local = email.substring(0, atIdx);
+                String domain = email.substring(atIdx);
+                String masked = local.length() <= 2
+                    ? local + "***"
+                    : local.charAt(0) + "***" + local.charAt(local.length() - 1);
+                return masked + domain;
+            })
+            .orElse("your registered email");
+    }
 }

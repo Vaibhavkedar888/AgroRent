@@ -32,10 +32,23 @@ public class AuthApiController {
     public ResponseEntity<?> requestOTP(@RequestParam String phoneNumber, HttpSession session) {
         log.info("API OTP request for: {}", phoneNumber);
         try {
+            // Check if user exists before generating OTP
+            if (!otpService.userExists(phoneNumber)) {
+                return ResponseEntity.status(404).body(Map.of(
+                    "error", "Phone number not registered. Please register first."
+                ));
+            }
             otpService.generateOTP(phoneNumber);
             session.setAttribute("tempPhoneNumber", phoneNumber);
-            return ResponseEntity.ok(Map.of("message", "OTP sent successfully"));
+
+            // Get user's email to show masked version to user (e.g. u***@gmail.com)
+            String maskedEmail = otpService.getMaskedEmail(phoneNumber);
+            return ResponseEntity.ok(Map.of(
+                "message", "OTP sent to your email",
+                "email", maskedEmail
+            ));
         } catch (Exception e) {
+            log.error("OTP request failed for {}: {}", phoneNumber, e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }

@@ -63,7 +63,15 @@ public class SecurityConfig {
         
         // Enable session-based security context storage so authentication persists across requests
         http.securityContext(sc -> sc.securityContextRepository(securityContextRepository()));
-        
+
+        // Configure session cookie for cross-origin requests (Netlify → Render)
+        // SameSite=None + Secure is required when frontend and backend are on different domains
+        http.sessionManagement(session -> session
+            .sessionCreationPolicy(
+                org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED
+            )
+        );
+
         return http.build();
     }
 
