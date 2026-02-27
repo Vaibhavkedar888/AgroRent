@@ -41,5 +41,6 @@ com\farming\rental\service\EquipmentService.class
 com\farming\rental\dto\EquipmentDTO.class
 com\farming\rental\entity\User$UserRole.class
 com\farming\rental\entity\Message.class
+com\farming\rental\controller\api\HealthController.class
 com\farming\rental\repository\MessageRepository.class
 com\farming\rental\controller\CustomErrorController.class

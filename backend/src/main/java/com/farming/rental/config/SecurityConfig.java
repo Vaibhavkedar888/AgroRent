@@ -40,9 +40,9 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/", "/login", "/register", "/request-otp", "/verify-otp", 
+                .requestMatchers("/", "/login", "/register", "/request-otp", "/verify-otp",
                                 "/static/**", "/css/**", "/js/**", "/images/**", "/h2-console/**",
-                                "/api/auth/**", "/api/public/**").permitAll()
+                                "/api/auth/**", "/api/public/**", "/api/health").permitAll()
                 .requestMatchers("/api/farmer/**").hasAnyAuthority("ROLE_FARMER")
                 .requestMatchers("/api/owner/**").hasAnyAuthority("ROLE_OWNER")
                 .requestMatchers("/api/admin/**").hasAnyAuthority("ROLE_ADMIN")

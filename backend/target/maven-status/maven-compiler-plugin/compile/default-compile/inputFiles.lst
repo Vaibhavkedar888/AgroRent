@@ -16,6 +16,7 @@ D:\PROJECT\krushak\backend\src\main\java\com\farming\rental\controller\api\Schem
 D:\PROJECT\krushak\backend\src\main\java\com\farming\rental\service\ReviewService.java
 D:\PROJECT\krushak\backend\src\main\java\com\farming\rental\entity\OTPVerification.java
 D:\PROJECT\krushak\backend\src\main\java\com\farming\rental\entity\Review.java
+D:\PROJECT\krushak\backend\src\main\java\com\farming\rental\controller\api\HealthController.java
 D:\PROJECT\krushak\backend\src\main\java\com\farming\rental\repository\EquipmentRepository.java
 D:\PROJECT\krushak\backend\src\main\java\com\farming\rental\config\SecurityConfig.java
 D:\PROJECT\krushak\backend\src\main\java\com\farming\rental\service\EmailService.java

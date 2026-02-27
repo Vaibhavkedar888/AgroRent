@@ -3,7 +3,8 @@ import { useAuth } from '../context/useAuth';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, Lock, ArrowRight, Loader, CheckCircle } from 'lucide-react';
-import api from '../api/axios';
+import api, { apiWithRetry } from '../api/axios';
+import ServerStatus from '../components/ServerStatus';
 
 const LoginPage = () => {
     const { login } = useAuth();
@@ -28,14 +29,16 @@ const LoginPage = () => {
         setLoading(true);
         setError('');
         try {
-            const res = await api.post('/api/auth/login', null, {
-                params: { email: email.trim().toLowerCase() }
-            });
+            const res = await apiWithRetry(() =>
+                api.post('/api/auth/login', null, {
+                    params: { email: email.trim().toLowerCase() }
+                })
+            );
             setSentEmail(res.data.email || email);
             setUserName(res.data.name || '');
             setStep('OTP');
         } catch (err) {
-            setError(err.response?.data?.error || 'Failed to send OTP. Please try again.');
+            setError(err.userMessage || err.response?.data?.error || 'Failed to send OTP. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -87,6 +90,9 @@ const LoginPage = () => {
                             : `OTP sent to ${sentEmail} — check your inbox`}
                     </p>
                 </div>
+
+                {/* Server Wake-up Status */}
+                <ServerStatus />
 
                 {/* From Registration Banner */}
                 {fromRegister && (

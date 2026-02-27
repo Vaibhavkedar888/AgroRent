@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { User, Phone, Mail, MapPin, Loader, Briefcase, CheckCircle } from 'lucide-react';
 import api from '../api/axios';
+import ServerStatus from '../components/ServerStatus';
 
 const RegisterPage = () => {
     const navigate = useNavigate();
@@ -90,6 +91,9 @@ const RegisterPage = () => {
                     </p>
                 </div>
 
+                {/* Server Wake-up Status */}
+                <ServerStatus />
+
                 {/* Success Banner */}
                 {success && (
                     <div className="flex items-center gap-3 bg-green-50 border border-green-200 text-green-700 p-4 rounded-xl text-sm">
@@ -120,8 +124,8 @@ const RegisterPage = () => {
                                     type="button"
                                     onClick={() => setFormData({ ...formData, role: r })}
                                     className={`py-3 px-4 rounded-xl border flex items-center justify-center gap-2 text-sm font-medium transition-colors ${formData.role === r
-                                            ? 'bg-green-50 border-green-500 text-green-700 ring-1 ring-green-500'
-                                            : 'border-gray-300 hover:bg-gray-50 text-gray-600'
+                                        ? 'bg-green-50 border-green-500 text-green-700 ring-1 ring-green-500'
+                                        : 'border-gray-300 hover:bg-gray-50 text-gray-600'
                                         }`}
                                 >
                                     {r === 'FARMER' ? <User size={16} /> : <Briefcase size={16} />}
