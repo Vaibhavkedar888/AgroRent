@@ -1,7 +1,6 @@
 package com.farming.rental.config;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -15,9 +14,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * Spring Security Configuration
@@ -28,9 +25,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    @Value("${frontend.url:http://localhost:5173}")
-    private String frontendUrl;
-
     /**
      * Configure HTTP security
      */
@@ -40,9 +34,9 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(authz -> authz
-                .requestMatchers("/", "/login", "/register", "/request-otp", "/verify-otp",
+                .requestMatchers("/", "/login", "/register", "/request-otp", "/verify-otp", 
                                 "/static/**", "/css/**", "/js/**", "/images/**", "/h2-console/**",
-                                "/api/auth/**", "/api/public/**", "/api/health").permitAll()
+                                "/api/auth/**", "/api/public/**").permitAll()
                 .requestMatchers("/api/farmer/**").hasAnyAuthority("ROLE_FARMER")
                 .requestMatchers("/api/owner/**").hasAnyAuthority("ROLE_OWNER")
                 .requestMatchers("/api/admin/**").hasAnyAuthority("ROLE_ADMIN")
@@ -63,15 +57,7 @@ public class SecurityConfig {
         
         // Enable session-based security context storage so authentication persists across requests
         http.securityContext(sc -> sc.securityContextRepository(securityContextRepository()));
-
-        // Configure session cookie for cross-origin requests (Netlify → Render)
-        // SameSite=None + Secure is required when frontend and backend are on different domains
-        http.sessionManagement(session -> session
-            .sessionCreationPolicy(
-                org.springframework.security.config.http.SessionCreationPolicy.IF_REQUIRED
-            )
-        );
-
+        
         return http.build();
     }
 
@@ -84,23 +70,15 @@ public class SecurityConfig {
     }
 
     /**
-     * CORS configuration - allows localhost (dev) and production Netlify URL
+     * CORS configuration
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        
-        List<String> allowedOrigins = new ArrayList<>();
-        allowedOrigins.add("http://localhost:5173");
-        if (frontendUrl != null && !frontendUrl.isBlank() && !frontendUrl.equals("http://localhost:5173")) {
-            allowedOrigins.add(frontendUrl);
-        }
-        
-        configuration.setAllowedOrigins(allowedOrigins);
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 
 /**
  * OTP Verification Entity - Handles One-Time Password authentication
- * Supports OTP delivery via Email (Gmail SMTP)
+ * Used for login verification via SMS OTP
  */
 @Document(collection = "otp_verifications")
 @Data
@@ -28,9 +28,6 @@ public class OTPVerification {
     @Field("phone_number")
     private String phoneNumber;
 
-    @Field("email")
-    private String email;   // email to which OTP was sent
-
     @Field("otp_code")
     private String otpCode; // 6-digit OTP
 
@@ -42,7 +39,7 @@ public class OTPVerification {
     private LocalDateTime createdAt;
 
     @Field("expires_at")
-    private LocalDateTime expiresAt; // OTP expiry time (10 minutes)
+    private LocalDateTime expiresAt; // OTP expiry time (usually 10 minutes)
 
     /**
      * Check if OTP is still valid

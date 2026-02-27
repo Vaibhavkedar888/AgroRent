@@ -13,8 +13,8 @@ import java.util.Optional;
 import java.util.Random;
 
 /**
- * OTPService — handles all OTP generation & verification
- * Supports email-based login: enter email → OTP sent to that email
+ * Service for OTP-based authentication
+ * Handles OTP generation, verification, and user authentication
  */
 @Service
 @RequiredArgsConstructor
@@ -23,174 +23,105 @@ public class OTPService {
 
     private final OTPVerificationRepository otpRepository;
     private final UserRepository userRepository;
-    private final EmailService emailService;
-
+    
+    // OTP validity period in minutes
     private static final int OTP_VALIDITY_MINUTES = 10;
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // EMAIL-BASED OTP (primary login flow)
-    // ─────────────────────────────────────────────────────────────────────────
-
     /**
-     * Generate & send OTP for login by EMAIL.
-     * Returns the User if the email is registered, throws if not found.
+     * Generate and send OTP to phone number
+     * In production, integrate with SMS gateway (Twilio, AWS SNS, etc.)
      */
-    public User generateOTPByEmail(String email) {
-        User user = userRepository.findByEmail(email)
-            .orElseThrow(() -> new RuntimeException("No account registered with this email."));
-
-        if (Boolean.TRUE.equals(user.getIsBlocked())) {
-            throw new RuntimeException("Your account has been blocked. Contact support.");
+    public OTPVerification generateOTP(String phoneNumber) {
+        log.info("Generating OTP for phone: {}", phoneNumber);
+        
+        // For development/testing: use fixed OTP for known test accounts to simplify login
+        String otpCode;
+        if ("9876543210".equals(phoneNumber) || "9111111111".equals(phoneNumber) || "9000000000".equals(phoneNumber)) {
+            otpCode = "123456";
+        } else {
+            otpCode = generateSixDigitOTP();
         }
-
-        String otpCode = generateSixDigitOTP();
         LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(OTP_VALIDITY_MINUTES);
 
-        // Upsert OTP record keyed on email
-        OTPVerification otp = otpRepository.findByEmail(email)
+        OTPVerification otp = otpRepository.findByPhoneNumber(phoneNumber)
             .orElse(new OTPVerification());
-
-        otp.setEmail(email);
-        otp.setPhoneNumber(user.getPhoneNumber());   // keep phone for backward compat
+        
+        otp.setPhoneNumber(phoneNumber);
         otp.setOtpCode(otpCode);
         otp.setIsVerified(false);
         otp.setExpiresAt(expiresAt);
+        
         otpRepository.save(otp);
-
-        // Send email asynchronously
-        emailService.sendOTPEmail(email, otpCode, user.getFullName());
-        log.info("OTP email dispatched to: {}", email);
-
-        return user;
+        
+        // TODO: Integrate SMS gateway to send OTP
+        log.info("OTP generated for {}: {} (Valid until {})", phoneNumber, otpCode, expiresAt);
+        
+        return otp;
     }
 
     /**
-     * Verify OTP by EMAIL and return authenticated User.
+     * Verify OTP and authenticate user
      */
-    public Optional<User> verifyOTPByEmail(String email, String otpCode) {
-        Optional<OTPVerification> otpVerification = otpRepository.findByEmail(email);
-
+    public Optional<User> verifyOTP(String phoneNumber, String otpCode) {
+        log.info("Verifying OTP for phone: {}", phoneNumber);
+        
+        Optional<OTPVerification> otpVerification = otpRepository.findByPhoneNumber(phoneNumber);
+        
         if (otpVerification.isEmpty()) {
-            log.warn("OTP not found for email: {}", email);
+            log.warn("OTP not found for phone: {}", phoneNumber);
             return Optional.empty();
         }
-
+        
         OTPVerification otp = otpVerification.get();
-
+        
+        // Check if OTP has expired
         if (otp.isExpired()) {
-            log.warn("OTP expired for email: {}", email);
+            log.warn("OTP expired for phone: {}", phoneNumber);
             return Optional.empty();
         }
-
+        
+        // Verify OTP code
         if (!otp.getOtpCode().equals(otpCode)) {
-            log.warn("Invalid OTP for email: {}", email);
+            log.warn("Invalid OTP code for phone: {}", phoneNumber);
             return Optional.empty();
         }
-
+        
+        // Mark OTP as verified
         otp.setIsVerified(true);
         otpRepository.save(otp);
-
-        return userRepository.findByEmail(email);
+        
+        // Get user by phone number
+        Optional<User> user = userRepository.findByPhoneNumber(phoneNumber);
+        
+        if (user.isPresent()) {
+            log.info("User authenticated via OTP: {}", phoneNumber);
+            return user;
+        }
+        
+        log.warn("No user found for phone: {}", phoneNumber);
+        return Optional.empty();
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // PHONE-BASED OTP (registration flow — sends OTP after user signs up)
-    // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Used after registration — sends OTP to the email provided in the form.
+     * Generate 6-digit random OTP
      */
-    public OTPVerification generateOTPForRegistration(String phoneNumber, String email, String fullName) {
-        String otpCode = generateSixDigitOTP();
-        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(OTP_VALIDITY_MINUTES);
-
-        OTPVerification otp = otpRepository.findByPhoneNumber(phoneNumber)
-            .orElse(new OTPVerification());
-
-        otp.setPhoneNumber(phoneNumber);
-        otp.setEmail(email);
-        otp.setOtpCode(otpCode);
-        otp.setIsVerified(false);
-        otp.setExpiresAt(expiresAt);
-        otpRepository.save(otp);
-
-        if (email != null && !email.isBlank()) {
-            emailService.sendOTPEmail(email, otpCode, fullName);
-            log.info("Registration OTP email dispatched to: {}", email);
-        }
-
-        return otp;
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // LEGACY PHONE-BASED (kept for backward compat)
-    // ─────────────────────────────────────────────────────────────────────────
-
-    public OTPVerification generateOTP(String phoneNumber) {
-        User user = userRepository.findByPhoneNumber(phoneNumber).orElse(null);
-        String otpCode = generateSixDigitOTP();
-        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(OTP_VALIDITY_MINUTES);
-
-        OTPVerification otp = otpRepository.findByPhoneNumber(phoneNumber)
-            .orElse(new OTPVerification());
-
-        otp.setPhoneNumber(phoneNumber);
-        otp.setOtpCode(otpCode);
-        otp.setIsVerified(false);
-        otp.setExpiresAt(expiresAt);
-
-        if (user != null && user.getEmail() != null) {
-            otp.setEmail(user.getEmail());
-            otpRepository.save(otp);
-            emailService.sendOTPEmail(user.getEmail(), otpCode, user.getFullName());
-        } else {
-            otpRepository.save(otp);
-        }
-
-        return otp;
-    }
-
-    public Optional<User> verifyOTP(String phoneNumber, String otpCode) {
-        return otpRepository.findByPhoneNumber(phoneNumber)
-            .filter(otp -> !otp.isExpired() && otp.getOtpCode().equals(otpCode))
-            .map(otp -> {
-                otp.setIsVerified(true);
-                otpRepository.save(otp);
-                return userRepository.findByPhoneNumber(phoneNumber).orElse(null);
-            })
-            .filter(java.util.Objects::nonNull)
-            .map(Optional::of)
-            .orElse(Optional.empty());
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // HELPERS
-    // ─────────────────────────────────────────────────────────────────────────
-
     private String generateSixDigitOTP() {
-        return String.valueOf(100000 + new Random().nextInt(900000));
+        Random random = new Random();
+        int otp = 100000 + random.nextInt(900000);
+        return String.valueOf(otp);
     }
 
+    /**
+     * Check if user exists by phone number
+     */
     public boolean userExists(String phoneNumber) {
         return userRepository.findByPhoneNumber(phoneNumber).isPresent();
     }
 
-    public boolean userExistsByEmail(String email) {
-        return userRepository.findByEmail(email).isPresent();
-    }
-
+    /**
+     * Get OTP status
+     */
     public Optional<OTPVerification> getOTPStatus(String phoneNumber) {
         return otpRepository.findByPhoneNumber(phoneNumber);
-    }
-
-    public String getMaskedEmail(String email) {
-        if (email == null || !email.contains("@")) return "your registered email";
-        int atIdx = email.indexOf('@');
-        String local = email.substring(0, atIdx);
-        String domain = email.substring(atIdx);
-        String masked = local.length() <= 2
-            ? local + "***"
-            : local.charAt(0) + "***" + local.charAt(local.length() - 1);
-        return masked + domain;
     }
 }
