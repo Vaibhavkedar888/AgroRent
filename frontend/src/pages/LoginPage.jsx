@@ -1,15 +1,20 @@
 import { useState } from 'react';
 import { useAuth } from '../context/useAuth';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Lock, ArrowRight, Loader } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Loader, CheckCircle } from 'lucide-react';
 import api from '../api/axios';
 
 const LoginPage = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
 
-    const [email, setEmail] = useState('');
+    // Pre-fill email if redirected from registration
+    const fromRegister = location.state?.fromRegister;
+    const prefillEmail = location.state?.email || '';
+
+    const [email, setEmail] = useState(prefillEmail);
     const [otp, setOtp] = useState('');
     const [step, setStep] = useState('EMAIL'); // EMAIL | OTP
     const [loading, setLoading] = useState(false);
@@ -82,6 +87,14 @@ const LoginPage = () => {
                             : `OTP sent to ${sentEmail} — check your inbox`}
                     </p>
                 </div>
+
+                {/* From Registration Banner */}
+                {fromRegister && (
+                    <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 p-4 rounded-xl text-sm">
+                        <CheckCircle size={18} className="shrink-0" />
+                        <span>Account created! Check your inbox — your OTP has been sent to <strong>{email}</strong></span>
+                    </div>
+                )}
 
                 {/* Error */}
                 {error && (

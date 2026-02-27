@@ -101,17 +101,31 @@ public class AuthApiController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody UserRegistrationDTO dto) {
         try {
-            if (userService.getUserByPhoneNumber(dto.getPhoneNumber()).isPresent()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Phone number already registered."));
+            // Validate required fields
+            if (dto.getPhoneNumber() == null || dto.getPhoneNumber().isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Phone number is required."));
             }
-            if (dto.getEmail() != null && !dto.getEmail().isBlank()
-                    && otpService.userExistsByEmail(dto.getEmail())) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Email already registered."));
+            if (dto.getEmail() == null || dto.getEmail().isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Email address is required for OTP-based login."));
+            }
+            if (dto.getFullName() == null || dto.getFullName().isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Full name is required."));
+            }
+
+            // Normalize email
+            dto.setEmail(dto.getEmail().trim().toLowerCase());
+
+            // Duplicate checks
+            if (userService.getUserByPhoneNumber(dto.getPhoneNumber()).isPresent()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "This phone number is already registered."));
+            }
+            if (otpService.userExistsByEmail(dto.getEmail())) {
+                return ResponseEntity.badRequest().body(Map.of("error", "This email is already registered. Please log in instead."));
             }
 
             User user = userService.registerUser(dto);
 
-            // Send OTP to the email provided at registration
+            // Send OTP to email for immediate login
             otpService.generateOTPForRegistration(
                 user.getPhoneNumber(),
                 user.getEmail(),
@@ -119,8 +133,8 @@ public class AuthApiController {
             );
 
             return ResponseEntity.ok(Map.of(
-                "message", "Registered! OTP sent to " + otpService.getMaskedEmail(user.getEmail()) + ". Use it to log in.",
-                "user", user
+                "message", "Account created! OTP sent to " + otpService.getMaskedEmail(user.getEmail()),
+                "email", user.getEmail()
             ));
         } catch (Exception e) {
             log.error("Registration failed: {}", e.getMessage());
