@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: krushak-backend
+    runtime: java
+    plan: free
+    buildCommand: "./mvnw clean package -DskipTests"
+    startCommand: "java -jar target/rental-system-1.0.0.jar"
+    healthCheckPath: /api/public/health
+    envVars:
+      - key: MONGODB_URI
+        sync: false   # Set manually in Render dashboard
+      - key: FRONTEND_URL
+        sync: false   # Set to your Netlify URL, e.g. https://krushak.netlify.app
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
