@@ -6,11 +6,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-/**
- * Repository for OTPVerification entity
- * Handles OTP storage and retrieval
- */
 @Repository
 public interface OTPVerificationRepository extends MongoRepository<OTPVerification, String> {
     Optional<OTPVerification> findByPhoneNumber(String phoneNumber);
+    Optional<OTPVerification> findByEmail(String email);
 }

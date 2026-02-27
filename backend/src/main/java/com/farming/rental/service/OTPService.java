@@ -13,7 +13,8 @@ import java.util.Optional;
 import java.util.Random;
 
 /**
- * Service for OTP-based authentication via Email (Gmail SMTP)
+ * OTPService — handles all OTP generation & verification
+ * Supports email-based login: enter email → OTP sent to that email
  */
 @Service
 @RequiredArgsConstructor
@@ -26,60 +27,80 @@ public class OTPService {
 
     private static final int OTP_VALIDITY_MINUTES = 10;
 
-    /**
-     * Generate and send OTP to the user's registered email
-     */
-    public OTPVerification generateOTP(String phoneNumber) {
-        log.info("Generating OTP for phone: {}", phoneNumber);
+    // ─────────────────────────────────────────────────────────────────────────
+    // EMAIL-BASED OTP (primary login flow)
+    // ─────────────────────────────────────────────────────────────────────────
 
-        // For test accounts: use fixed OTP to simplify testing
-        String otpCode;
-        if ("9876543210".equals(phoneNumber) || "9111111111".equals(phoneNumber) || "9000000000".equals(phoneNumber)) {
-            otpCode = "123456";
-        } else {
-            otpCode = generateSixDigitOTP();
+    /**
+     * Generate & send OTP for login by EMAIL.
+     * Returns the User if the email is registered, throws if not found.
+     */
+    public User generateOTPByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("No account registered with this email."));
+
+        if (Boolean.TRUE.equals(user.getIsBlocked())) {
+            throw new RuntimeException("Your account has been blocked. Contact support.");
         }
 
+        String otpCode = generateSixDigitOTP();
         LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(OTP_VALIDITY_MINUTES);
 
-        OTPVerification otp = otpRepository.findByPhoneNumber(phoneNumber)
+        // Upsert OTP record keyed on email
+        OTPVerification otp = otpRepository.findByEmail(email)
             .orElse(new OTPVerification());
 
-        otp.setPhoneNumber(phoneNumber);
+        otp.setEmail(email);
+        otp.setPhoneNumber(user.getPhoneNumber());   // keep phone for backward compat
         otp.setOtpCode(otpCode);
         otp.setIsVerified(false);
         otp.setExpiresAt(expiresAt);
+        otpRepository.save(otp);
 
-        // Look up user's email and name from database
-        Optional<User> userOpt = userRepository.findByPhoneNumber(phoneNumber);
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            String email = user.getEmail();
-            otp.setEmail(email);
-            otpRepository.save(otp);
+        // Send email asynchronously
+        emailService.sendOTPEmail(email, otpCode, user.getFullName());
+        log.info("OTP email dispatched to: {}", email);
 
-            if (email != null && !email.isBlank()) {
-                // Send OTP via email (async — does not block the response)
-                emailService.sendOTPEmail(email, otpCode, user.getFullName());
-                log.info("OTP email dispatched to {} for phone: {}", email, phoneNumber);
-            } else {
-                log.warn("User {} has no email registered — OTP not sent via email", phoneNumber);
-            }
-        } else {
-            // User not found during registration flow — save OTP anyway
-            otpRepository.save(otp);
-            log.warn("No user found for phone {} — OTP saved but email not sent", phoneNumber);
-        }
-
-        return otp;
+        return user;
     }
 
     /**
-     * Generate OTP and send to a specific email (used during registration when user is brand new)
+     * Verify OTP by EMAIL and return authenticated User.
+     */
+    public Optional<User> verifyOTPByEmail(String email, String otpCode) {
+        Optional<OTPVerification> otpVerification = otpRepository.findByEmail(email);
+
+        if (otpVerification.isEmpty()) {
+            log.warn("OTP not found for email: {}", email);
+            return Optional.empty();
+        }
+
+        OTPVerification otp = otpVerification.get();
+
+        if (otp.isExpired()) {
+            log.warn("OTP expired for email: {}", email);
+            return Optional.empty();
+        }
+
+        if (!otp.getOtpCode().equals(otpCode)) {
+            log.warn("Invalid OTP for email: {}", email);
+            return Optional.empty();
+        }
+
+        otp.setIsVerified(true);
+        otpRepository.save(otp);
+
+        return userRepository.findByEmail(email);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // PHONE-BASED OTP (registration flow — sends OTP after user signs up)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Used after registration — sends OTP to the email provided in the form.
      */
     public OTPVerification generateOTPForRegistration(String phoneNumber, String email, String fullName) {
-        log.info("Generating registration OTP for phone: {}, email: {}", phoneNumber, email);
-
         String otpCode = generateSixDigitOTP();
         LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(OTP_VALIDITY_MINUTES);
 
@@ -101,77 +122,75 @@ public class OTPService {
         return otp;
     }
 
-    /**
-     * Verify OTP and authenticate user
-     */
-    public Optional<User> verifyOTP(String phoneNumber, String otpCode) {
-        log.info("Verifying OTP for phone: {}", phoneNumber);
+    // ─────────────────────────────────────────────────────────────────────────
+    // LEGACY PHONE-BASED (kept for backward compat)
+    // ─────────────────────────────────────────────────────────────────────────
 
-        Optional<OTPVerification> otpVerification = otpRepository.findByPhoneNumber(phoneNumber);
+    public OTPVerification generateOTP(String phoneNumber) {
+        User user = userRepository.findByPhoneNumber(phoneNumber).orElse(null);
+        String otpCode = generateSixDigitOTP();
+        LocalDateTime expiresAt = LocalDateTime.now().plusMinutes(OTP_VALIDITY_MINUTES);
 
-        if (otpVerification.isEmpty()) {
-            log.warn("OTP not found for phone: {}", phoneNumber);
-            return Optional.empty();
+        OTPVerification otp = otpRepository.findByPhoneNumber(phoneNumber)
+            .orElse(new OTPVerification());
+
+        otp.setPhoneNumber(phoneNumber);
+        otp.setOtpCode(otpCode);
+        otp.setIsVerified(false);
+        otp.setExpiresAt(expiresAt);
+
+        if (user != null && user.getEmail() != null) {
+            otp.setEmail(user.getEmail());
+            otpRepository.save(otp);
+            emailService.sendOTPEmail(user.getEmail(), otpCode, user.getFullName());
+        } else {
+            otpRepository.save(otp);
         }
 
-        OTPVerification otp = otpVerification.get();
-
-        if (otp.isExpired()) {
-            log.warn("OTP expired for phone: {}", phoneNumber);
-            return Optional.empty();
-        }
-
-        if (!otp.getOtpCode().equals(otpCode)) {
-            log.warn("Invalid OTP code for phone: {}", phoneNumber);
-            return Optional.empty();
-        }
-
-        otp.setIsVerified(true);
-        otpRepository.save(otp);
-
-        Optional<User> user = userRepository.findByPhoneNumber(phoneNumber);
-        if (user.isPresent()) {
-            log.info("User authenticated via OTP: {}", phoneNumber);
-            return user;
-        }
-
-        log.warn("No user found for phone: {}", phoneNumber);
-        return Optional.empty();
+        return otp;
     }
 
-    /**
-     * Generate 6-digit random OTP
-     */
+    public Optional<User> verifyOTP(String phoneNumber, String otpCode) {
+        return otpRepository.findByPhoneNumber(phoneNumber)
+            .filter(otp -> !otp.isExpired() && otp.getOtpCode().equals(otpCode))
+            .map(otp -> {
+                otp.setIsVerified(true);
+                otpRepository.save(otp);
+                return userRepository.findByPhoneNumber(phoneNumber).orElse(null);
+            })
+            .filter(java.util.Objects::nonNull)
+            .map(Optional::of)
+            .orElse(Optional.empty());
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // HELPERS
+    // ─────────────────────────────────────────────────────────────────────────
+
     private String generateSixDigitOTP() {
-        Random random = new Random();
-        int otp = 100000 + random.nextInt(900000);
-        return String.valueOf(otp);
+        return String.valueOf(100000 + new Random().nextInt(900000));
     }
 
     public boolean userExists(String phoneNumber) {
         return userRepository.findByPhoneNumber(phoneNumber).isPresent();
     }
 
+    public boolean userExistsByEmail(String email) {
+        return userRepository.findByEmail(email).isPresent();
+    }
+
     public Optional<OTPVerification> getOTPStatus(String phoneNumber) {
         return otpRepository.findByPhoneNumber(phoneNumber);
     }
 
-    /**
-     * Returns a masked email like u***@gmail.com for UI display
-     */
-    public String getMaskedEmail(String phoneNumber) {
-        return userRepository.findByPhoneNumber(phoneNumber)
-            .map(user -> {
-                String email = user.getEmail();
-                if (email == null || !email.contains("@")) return "your registered email";
-                int atIdx = email.indexOf('@');
-                String local = email.substring(0, atIdx);
-                String domain = email.substring(atIdx);
-                String masked = local.length() <= 2
-                    ? local + "***"
-                    : local.charAt(0) + "***" + local.charAt(local.length() - 1);
-                return masked + domain;
-            })
-            .orElse("your registered email");
+    public String getMaskedEmail(String email) {
+        if (email == null || !email.contains("@")) return "your registered email";
+        int atIdx = email.indexOf('@');
+        String local = email.substring(0, atIdx);
+        String domain = email.substring(atIdx);
+        String masked = local.length() <= 2
+            ? local + "***"
+            : local.charAt(0) + "***" + local.charAt(local.length() - 1);
+        return masked + domain;
     }
 }
