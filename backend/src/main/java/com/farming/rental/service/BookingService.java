@@ -23,28 +23,29 @@ public class BookingService {
 
     private final BookingRepository bookingRepository;
     private final EquipmentService equipmentService;
+    private final InvoiceService invoiceService;
+    private final EmailService emailService;
 
     /**
      * Create new booking
      */
     public Booking createBooking(Booking booking) {
-        log.info("Creating booking for farmer: {} equipment: {}", 
-            booking.getFarmer().getId(), booking.getEquipment().getId());
-        
+        log.info("Creating booking for farmer: {} equipment: {}",
+                booking.getFarmer().getId(), booking.getEquipment().getId());
+
         // Check for conflicting bookings
         List<Booking> conflicts = bookingRepository.findConflictingBookings(
-            booking.getEquipment().getId(),
-            booking.getStartDate(),
-            booking.getEndDate()
-        );
-        
+                booking.getEquipment().getId(),
+                booking.getStartDate(),
+                booking.getEndDate());
+
         if (!conflicts.isEmpty()) {
             throw new RuntimeException("Equipment not available for selected dates");
         }
-        
+
         booking.setStatus(Booking.BookingStatus.PENDING);
         booking.setBookingDate(LocalDate.now());
-        
+
         return bookingRepository.save(booking);
     }
 
@@ -66,17 +67,10 @@ public class BookingService {
      * Get all bookings for an owner's equipment
      */
     public List<Booking> getOwnerBookings(User owner) {
-        // In Mongo, deep traversal is hard.
-        // We fetch all equipment for owner, then fetch bookings for those equipment.
-        // OR we can use the repository method if we fix the query, but manual is safer here.
         List<Equipment> equipmentList = equipmentService.getOwnerEquipment(owner);
-        // This is inefficient (N+1), but simple for now. 
-        // Optimization: bookingRepository.findByEquipmentIn(equipmentList)
-        // Since we don't have findByEquipmentIn yet, let's just stream/concat.
-        
         return equipmentList.stream()
-            .flatMap(eq -> bookingRepository.findByEquipment(eq).stream())
-            .toList();
+                .flatMap(eq -> bookingRepository.findByEquipment(eq).stream())
+                .toList();
     }
 
     /**
@@ -85,9 +79,34 @@ public class BookingService {
     public Booking approveBooking(String bookingId) {
         log.info("Approving booking: {}", bookingId);
         Booking booking = bookingRepository.findById(bookingId)
-            .orElseThrow(() -> new RuntimeException("Booking not found"));
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
         booking.setStatus(Booking.BookingStatus.CONFIRMED);
-        return bookingRepository.save(booking);
+        Booking saved = bookingRepository.save(booking);
+
+        // Generate and send Invoice
+        try {
+            byte[] pdfBytes = invoiceService.generateInvoicePdf(saved);
+            String subject = "AgroRent Booking Approved: " + saved.getEquipment().getName();
+            String body = "Dear " + saved.getFarmer().getFullName() + ",\n\n" +
+                    "Your booking request for " + saved.getEquipment().getName() + " has been APPROVED by the owner.\n"
+                    +
+                    "Please find the attached invoice for your reference.\n\n" +
+                    "Happy Farming!\nTeam AgroRent";
+
+            emailService.sendEmailWithAttachment(
+                    saved.getFarmer().getEmail(),
+                    subject,
+                    body,
+                    pdfBytes,
+                    "Invoice_" + saved.getId().substring(0, 8) + ".pdf");
+            log.info("Invoice email sent for booking: {}", bookingId);
+        } catch (Exception e) {
+            log.error("Failed to send invoice email for booking: {}", bookingId, e);
+            // We don't fail the approval if email fails, but we log it
+        }
+
+        return saved;
     }
 
     /**
@@ -96,7 +115,7 @@ public class BookingService {
     public Booking rejectBooking(String bookingId) {
         log.info("Rejecting booking: {}", bookingId);
         Booking booking = bookingRepository.findById(bookingId)
-            .orElseThrow(() -> new RuntimeException("Booking not found"));
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
         booking.setStatus(Booking.BookingStatus.CANCELLED);
         return bookingRepository.save(booking);
     }
@@ -107,12 +126,12 @@ public class BookingService {
     public Booking cancelBooking(String bookingId) {
         log.info("Cancelling booking: {}", bookingId);
         Booking booking = bookingRepository.findById(bookingId)
-            .orElseThrow(() -> new RuntimeException("Booking not found"));
-        
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
         if (!booking.canBeCancelled()) {
             throw new RuntimeException("Booking cannot be cancelled at this time");
         }
-        
+
         booking.setStatus(Booking.BookingStatus.CANCELLED);
         return bookingRepository.save(booking);
     }
@@ -123,7 +142,7 @@ public class BookingService {
     public Booking completeBooking(String bookingId) {
         log.info("Completing booking: {}", bookingId);
         Booking booking = bookingRepository.findById(bookingId)
-            .orElseThrow(() -> new RuntimeException("Booking not found"));
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
         booking.setStatus(Booking.BookingStatus.COMPLETED);
         return bookingRepository.save(booking);
     }

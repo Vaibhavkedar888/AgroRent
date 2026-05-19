@@ -6,6 +6,7 @@ import { useLanguage } from '../context/useLanguage';
 import EquipmentService from '../api/equipmentService';
 import ReviewService from '../api/reviewService';
 import { useAuth } from '../context/useAuth';
+import Modal from '../components/Modal';
 
 const EquipmentDetailsPage = () => {
     const { t } = useLanguage();
@@ -20,6 +21,7 @@ const EquipmentDetailsPage = () => {
     const [bookingLoading, setBookingLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
+    const [bookingDetails, setBookingDetails] = useState(null);
 
     const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
     const [rentalType, setRentalType] = useState('DAILY'); // HOURLY, DAILY, WEEKLY
@@ -87,7 +89,7 @@ const EquipmentDetailsPage = () => {
         if (!bookingData.startDate || !bookingData.endDate) return 0;
         const start = new Date(bookingData.startDate);
         const end = new Date(bookingData.endDate);
-        const diffDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+        const diffDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
 
         if (rentalType === 'WEEKLY') {
             const weeks = Math.ceil(diffDays / 7);
@@ -103,11 +105,16 @@ const EquipmentDetailsPage = () => {
         setError('');
 
         try {
-            await EquipmentService.bookEquipment({
+            const response = await EquipmentService.bookEquipment({
                 equipmentId: id,
                 rentalType,
                 farmerCoordinates: bookingData.latitude ? [bookingData.longitude, bookingData.latitude] : null,
                 ...bookingData
+            });
+            setBookingDetails({
+                ...response,
+                equipmentName: equipment.name,
+                totalAmount: calculateTotal()
             });
             setSuccess(true);
         } catch (err) {
@@ -122,6 +129,44 @@ const EquipmentDetailsPage = () => {
 
     return (
         <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+            <Modal
+                isOpen={success}
+                onClose={() => setSuccess(false)}
+                title="Booking Request Confirmed"
+            >
+                <div className="text-center">
+                    <div className="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <CheckCircle className="text-green-600" size={40} />
+                    </div>
+                    <h3 className="text-2xl font-black text-gray-900 mb-2">Order Request Sent!</h3>
+                    <p className="text-gray-500 mb-8">Your request for <b>{equipment.name}</b> has been sent to the owner. You will receive an email with the bill once approved.</p>
+
+                    <div className="bg-gray-50 rounded-2xl p-6 mb-8 border border-gray-100 text-left">
+                        <div className="flex justify-between mb-2">
+                            <span className="text-gray-500">Rental Type</span>
+                            <span className="font-bold text-gray-900">{rentalType}</span>
+                        </div>
+                        <div className="flex justify-between mb-2">
+                            <span className="text-gray-500">Duration</span>
+                            <span className="font-bold text-gray-900">{bookingDetails?.totalDuration} {rentalType === 'HOURLY' ? 'Hours' : rentalType === 'WEEKLY' ? 'Weeks' : 'Days'}</span>
+                        </div>
+                        <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
+                            <span className="text-gray-500 font-bold uppercase text-xs tracking-wider">Estimated Total</span>
+                            <span className="text-2xl font-black text-primary-600">₹{bookingDetails?.totalAmount}</span>
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <Link to="/farmer/dashboard" className="block w-full bg-primary-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-primary-200 hover:bg-primary-700 transition">
+                            Go to My Dashboard
+                        </Link>
+                        <button onClick={() => setSuccess(false)} className="w-full text-gray-400 font-bold py-2">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
             <div className="max-w-7xl mx-auto">
                 <Link to="/equipment" className="flex items-center text-gray-500 hover:text-gray-900 mb-6 transition">
                     <ArrowLeft size={20} className="mr-2" /> {t('backToBrowse')}
@@ -167,106 +212,95 @@ const EquipmentDetailsPage = () => {
                         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-3xl shadow-2xl p-8 border border-gray-100">
                             <h2 className="text-2xl font-bold text-gray-900 mb-6">Request Booking</h2>
 
-                            {success ? (
-                                <div className="text-center py-10">
-                                    <div className="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                                        <CheckCircle className="text-green-600" size={40} />
+                            <form onSubmit={handleBooking} className="space-y-6">
+                                {!user ? (
+                                    <div className="bg-blue-50 text-blue-700 p-4 rounded-2xl text-sm flex gap-3">
+                                        <AlertCircle size={20} className="shrink-0" />
+                                        <span>Please <Link to="/login" className="underline font-bold">Log in as a Farmer</Link> to book.</span>
                                     </div>
-                                    <h3 className="text-xl font-bold text-gray-900 mb-2">Request Sent!</h3>
-                                    <p className="text-gray-500 mb-8">The owner will be notified of your request.</p>
-                                    <Link to="/farmer/dashboard" className="block w-full bg-primary-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-primary-200">View My Bookings</Link>
+                                ) : null}
+
+                                {error && <div className="bg-red-50 text-red-500 p-4 rounded-2xl text-sm font-medium">{error}</div>}
+
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-3">Rental Duration Type</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {['HOURLY', 'DAILY', 'WEEKLY'].map(type => (
+                                            <button
+                                                key={type}
+                                                type="button"
+                                                onClick={() => setRentalType(type)}
+                                                className={`py-3 rounded-xl text-sm font-bold transition-all border ${rentalType === type ? 'bg-primary-600 text-white border-primary-600 shadow-lg shadow-primary-200' : 'bg-gray-50 text-gray-500 border-gray-100 hover:bg-gray-100'}`}
+                                            >
+                                                {type === 'HOURLY' ? 'Hourly' : type === 'DAILY' ? 'Daily' : 'Weekly'}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
-                            ) : (
-                                <form onSubmit={handleBooking} className="space-y-6">
-                                    {!user ? (
-                                        <div className="bg-blue-50 text-blue-700 p-4 rounded-2xl text-sm flex gap-3">
-                                            <AlertCircle size={20} className="shrink-0" />
-                                            <span>Please <Link to="/login" className="underline font-bold">Log in as a Farmer</Link> to book.</span>
-                                        </div>
-                                    ) : null}
 
-                                    {error && <div className="bg-red-50 text-red-500 p-4 rounded-2xl text-sm font-medium">{error}</div>}
-
+                                <div className="grid grid-cols-1 gap-4 pt-2">
                                     <div>
-                                        <label className="block text-sm font-bold text-gray-700 mb-3">Rental Duration Type</label>
-                                        <div className="grid grid-cols-3 gap-2">
-                                            {['HOURLY', 'DAILY', 'WEEKLY'].map(type => (
-                                                <button
-                                                    key={type}
-                                                    type="button"
-                                                    onClick={() => setRentalType(type)}
-                                                    className={`py-3 rounded-xl text-sm font-bold transition-all border ${rentalType === type ? 'bg-primary-600 text-white border-primary-600 shadow-lg shadow-primary-200' : 'bg-gray-50 text-gray-500 border-gray-100 hover:bg-gray-100'}`}
-                                                >
-                                                    {type === 'HOURLY' ? 'Hourly' : type === 'DAILY' ? 'Daily' : 'Weekly'}
-                                                </button>
-                                            ))}
-                                        </div>
+                                        <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Start Date</label>
+                                        <input
+                                            type="date"
+                                            required
+                                            className="w-full rounded-xl border-gray-100 border p-4 focus:ring-2 focus:ring-primary-500 transition"
+                                            value={bookingData.startDate}
+                                            onChange={(e) => setBookingData({ ...bookingData, startDate: e.target.value })}
+                                        />
                                     </div>
-
-                                    <div className="grid grid-cols-1 gap-4 pt-2">
+                                    {rentalType === 'HOURLY' ? (
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Start Time</label>
+                                                <input type="time" required className="w-full rounded-xl border-gray-100 border p-4 bg-gray-50" value={bookingData.startTime} onChange={(e) => setBookingData({ ...bookingData, startTime: e.target.value })} />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-400 uppercase mb-2">End Time</label>
+                                                <input type="time" required className="w-full rounded-xl border-gray-100 border p-4 bg-gray-50" value={bookingData.endTime} onChange={(e) => setBookingData({ ...bookingData, endTime: e.target.value })} />
+                                            </div>
+                                        </div>
+                                    ) : (
                                         <div>
-                                            <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Start Date</label>
+                                            <label className="block text-xs font-bold text-gray-400 uppercase mb-2">End Date</label>
                                             <input
                                                 type="date"
                                                 required
-                                                className="w-full rounded-xl border-gray-100 border p-4 focus:ring-2 focus:ring-primary-500 transition"
-                                                value={bookingData.startDate}
-                                                onChange={(e) => setBookingData({ ...bookingData, startDate: e.target.value })}
+                                                className="w-full rounded-xl border-gray-100 border p-4 bg-gray-50"
+                                                value={bookingData.endDate}
+                                                onChange={(e) => setBookingData({ ...bookingData, endDate: e.target.value })}
                                             />
                                         </div>
-                                        {rentalType === 'HOURLY' ? (
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-xs font-bold text-gray-400 uppercase mb-2">Start Time</label>
-                                                    <input type="time" required className="w-full rounded-xl border-gray-100 border p-4 bg-gray-50" value={bookingData.startTime} onChange={(e) => setBookingData({ ...bookingData, startTime: e.target.value })} />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-xs font-bold text-gray-400 uppercase mb-2">End Time</label>
-                                                    <input type="time" required className="w-full rounded-xl border-gray-100 border p-4 bg-gray-50" value={bookingData.endTime} onChange={(e) => setBookingData({ ...bookingData, endTime: e.target.value })} />
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div>
-                                                <label className="block text-xs font-bold text-gray-400 uppercase mb-2">End Date</label>
-                                                <input
-                                                    type="date"
-                                                    required
-                                                    className="w-full rounded-xl border-gray-100 border p-4 bg-gray-50"
-                                                    value={bookingData.endDate}
-                                                    onChange={(e) => setBookingData({ ...bookingData, endDate: e.target.value })}
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
+                                    )}
+                                </div>
 
-                                    <div className="pt-2">
-                                        <button
-                                            type="button"
-                                            onClick={handleGetLocation}
-                                            className={`w-full flex items-center justify-center gap-2 py-4 rounded-xl font-bold transition-all border ${bookingData.latitude ? 'bg-green-50 text-green-700 border-green-100' : 'bg-primary-50 text-primary-700 border-primary-100 hover:bg-primary-100'}`}
-                                        >
-                                            <MapPin size={20} />
-                                            {bookingData.latitude ? 'Location Captured!' : 'Capture My Current Location'}
-                                        </button>
-                                        <p className="text-[10px] text-gray-400 mt-2 text-center uppercase tracking-widest font-bold">Required to find nearest service</p>
-                                    </div>
-
-                                    <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-gray-500 font-bold uppercase tracking-wider text-xs">Total Estimate</span>
-                                            <span className="text-3xl font-black text-gray-900">₹{calculateTotal()}</span>
-                                        </div>
-                                    </div>
-
+                                <div className="pt-2">
                                     <button
-                                        type="submit"
-                                        disabled={bookingLoading || !user || user.role !== 'FARMER'}
-                                        className="w-full py-5 rounded-2xl bg-primary-600 text-white text-lg font-black hover:bg-primary-700 transition-all shadow-xl shadow-primary-200 disabled:opacity-50 flex items-center justify-center"
+                                        type="button"
+                                        onClick={handleGetLocation}
+                                        className={`w-full flex items-center justify-center gap-2 py-4 rounded-xl font-bold transition-all border ${bookingData.latitude ? 'bg-green-50 text-green-700 border-green-100' : 'bg-primary-50 text-primary-700 border-primary-100 hover:bg-primary-100'}`}
                                     >
-                                        {bookingLoading ? <Loader className="animate-spin" /> : 'Confirm Booking Request'}
+                                        <MapPin size={20} />
+                                        {bookingData.latitude ? 'Location Captured!' : 'Capture My Current Location'}
                                     </button>
-                                </form>
-                            )}
+                                    <p className="text-[10px] text-gray-400 mt-2 text-center uppercase tracking-widest font-bold">Required to find nearest service</p>
+                                </div>
+
+                                <div className="bg-gray-50 p-6 rounded-3xl border border-gray-100">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-gray-500 font-bold uppercase tracking-wider text-xs">Total Estimate</span>
+                                        <span className="text-3xl font-black text-gray-900">₹{calculateTotal()}</span>
+                                    </div>
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={bookingLoading || !user || user.role !== 'FARMER'}
+                                    className="w-full py-5 rounded-2xl bg-primary-600 text-white text-lg font-black hover:bg-primary-700 transition-all shadow-xl shadow-primary-200 disabled:opacity-50 flex items-center justify-center"
+                                >
+                                    {bookingLoading ? <Loader className="animate-spin" /> : 'Confirm Booking Request'}
+                                </button>
+                            </form>
                         </motion.div>
                     </div>
                 </div>

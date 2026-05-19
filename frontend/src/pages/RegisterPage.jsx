@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { User, Phone, Mail, MapPin, Loader, Briefcase } from 'lucide-react';
@@ -8,6 +8,7 @@ const RegisterPage = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const videoRef = useRef(null);
 
     const [formData, setFormData] = useState({
         phoneNumber: '',
@@ -43,15 +44,23 @@ const RegisterPage = () => {
 
     return (
         <div
-            className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative"
-            style={{
-                backgroundImage: `url('https://media.istockphoto.com/id/487277894/photo/farmer-spreads-fertilizers-in-the-field-of-paddy-rice-plants.jpg?s=612x612&w=0&k=20&c=78DTfPZJ12t_3pLOxecxqNEhEYOk1ZTMhKrogLjGux8=')`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center'
-            }}
+            className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
         >
+            {/* Background Video */}
+            <video
+                ref={videoRef}
+                autoPlay
+                loop
+                muted
+                playsInline
+                onLoadedData={() => { if (videoRef.current) videoRef.current.currentTime = 8; }}
+                className="absolute top-0 left-0 w-full h-full object-cover z-0 brightness-[0.6]"
+            >
+                <source src="/farming-video.mp4" type="video/mp4" />
+            </video>
+
             {/* Dark Overlay */}
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-0"></div>
 
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -59,11 +68,12 @@ const RegisterPage = () => {
                 className="max-w-2xl w-full space-y-8 bg-white/95 backdrop-blur-md p-10 rounded-3xl shadow-2xl relative z-10"
             >
                 <div className="text-center">
+                    <img src="/logo.png" alt="AgroRent Logo" className="h-16 w-auto mx-auto mb-4" />
                     <h2 className="text-3xl font-extrabold text-gray-900">
                         Create an Account
                     </h2>
                     <p className="mt-2 text-sm text-gray-600">
-                        Join Krushak to rent or list farming equipment
+                        Join AGRORent to rent or list farming equipment
                     </p>
                 </div>
 
@@ -134,8 +144,9 @@ const RegisterPage = () => {
                             <input
                                 name="email"
                                 type="email"
+                                required
                                 className="pl-10 block w-full rounded-lg border-gray-300 border py-2.5 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                                placeholder="Email Address (Optional)"
+                                placeholder="Email Address"
                                 value={formData.email}
                                 onChange={handleChange}
                             />

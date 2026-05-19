@@ -12,5 +12,5 @@ import java.util.Optional;
  */
 @Repository
 public interface OTPVerificationRepository extends MongoRepository<OTPVerification, String> {
-    Optional<OTPVerification> findByPhoneNumber(String phoneNumber);
+    Optional<OTPVerification> findByEmail(String email);
 }

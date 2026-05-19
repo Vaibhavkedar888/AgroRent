@@ -31,6 +31,9 @@ public class UserService {
         if (userRepository.findByPhoneNumber(registrationDTO.getPhoneNumber()).isPresent()) {
             throw new RuntimeException("User with this phone number already exists");
         }
+        if (userRepository.findByEmail(registrationDTO.getEmail()).isPresent()) {
+            throw new RuntimeException("User with this email already exists");
+        }
         
         User user = new User();
         user.setPhoneNumber(registrationDTO.getPhoneNumber());
@@ -52,6 +55,13 @@ public class UserService {
      */
     public Optional<User> getUserByPhoneNumber(String phoneNumber) {
         return userRepository.findByPhoneNumber(phoneNumber);
+    }
+    
+    /**
+     * Get user by email
+     */
+    public Optional<User> getUserByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 
     /**

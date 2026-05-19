@@ -17,10 +17,10 @@ import java.util.List;
 public interface EquipmentRepository extends MongoRepository<Equipment, String> {
     List<Equipment> findByOwner(User owner);
     List<Equipment> findByCategory(String category);
-    List<Equipment> findByIsAvailableAndIsApprovedTrue(Boolean isAvailable);
+    List<Equipment> findByIsAvailableAndIsApprovedTrueOrderByCreatedAtDesc(Boolean isAvailable);
     
     List<Equipment> findByCoordinatesNear(Point point);
     
-    @Query("{ 'category' : ?0, 'isApproved' : true, 'isAvailable' : true }")
-    List<Equipment> findAvailableByCategory(String category);
+    @Query(value = "{ 'category' : ?0, 'isApproved' : true, 'isAvailable' : true }", sort = "{ 'createdAt' : -1 }")
+    List<Equipment> findAvailableByCategoryOrderByCreatedAtDesc(String category);
 }

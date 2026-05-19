@@ -35,14 +35,16 @@ public class AdminApiController {
 
     @GetMapping("/dashboard")
     public ResponseEntity<?> getDashboardStats(HttpSession session) {
-        if (!isAdmin(session)) return ResponseEntity.status(403).build();
+        if (!isAdmin(session))
+            return ResponseEntity.status(403).build();
 
         List<User> allUsers = userService.getAllUsers();
         List<Equipment> allEquipment = equipmentService.getAllEquipment();
         List<Booking> allBookings = bookingService.getAllBookings();
 
         BigDecimal totalRevenue = allBookings.stream()
-                .filter(b -> b.getStatus() == Booking.BookingStatus.CONFIRMED || b.getStatus() == Booking.BookingStatus.COMPLETED)
+                .filter(b -> b.getStatus() == Booking.BookingStatus.CONFIRMED
+                        || b.getStatus() == Booking.BookingStatus.COMPLETED)
                 .map(Booking::getTotalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -52,21 +54,22 @@ public class AdminApiController {
                 "totalBookings", allBookings.size(),
                 "totalRevenue", totalRevenue,
                 "pendingEquipment", allEquipment.stream().filter(e -> !e.getIsApproved()).toList(),
-                "recentBookings", allBookings.stream().limit(10).toList()
-        );
+                "recentBookings", allBookings.stream().limit(10).toList());
 
         return ResponseEntity.ok(stats);
     }
 
     @GetMapping("/users")
     public ResponseEntity<?> getAllUsers(HttpSession session) {
-        if (!isAdmin(session)) return ResponseEntity.status(403).build();
+        if (!isAdmin(session))
+            return ResponseEntity.status(403).build();
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
     @PostMapping("/users/{userId}/block")
     public ResponseEntity<?> blockUser(@PathVariable String userId, HttpSession session) {
-        if (!isAdmin(session)) return ResponseEntity.status(403).build();
+        if (!isAdmin(session))
+            return ResponseEntity.status(403).build();
         try {
             userService.blockUser(userId);
             return ResponseEntity.ok(Map.of("message", "User blocked"));
@@ -77,7 +80,8 @@ public class AdminApiController {
 
     @PostMapping("/users/{userId}/unblock")
     public ResponseEntity<?> unblockUser(@PathVariable String userId, HttpSession session) {
-        if (!isAdmin(session)) return ResponseEntity.status(403).build();
+        if (!isAdmin(session))
+            return ResponseEntity.status(403).build();
         try {
             userService.unblockUser(userId);
             return ResponseEntity.ok(Map.of("message", "User unblocked"));
@@ -88,7 +92,8 @@ public class AdminApiController {
 
     @PostMapping("/equipment/{equipmentId}/approve")
     public ResponseEntity<?> approveEquipment(@PathVariable String equipmentId, HttpSession session) {
-        if (!isAdmin(session)) return ResponseEntity.status(403).build();
+        if (!isAdmin(session))
+            return ResponseEntity.status(403).build();
         try {
             equipmentService.approveEquipment(equipmentId);
             return ResponseEntity.ok(Map.of("message", "Equipment approved"));
@@ -99,7 +104,8 @@ public class AdminApiController {
 
     @DeleteMapping("/equipment/{equipmentId}")
     public ResponseEntity<?> deleteEquipment(@PathVariable String equipmentId, HttpSession session) {
-        if (!isAdmin(session)) return ResponseEntity.status(403).build();
+        if (!isAdmin(session))
+            return ResponseEntity.status(403).build();
         try {
             equipmentService.deleteEquipment(equipmentId);
             return ResponseEntity.ok(Map.of("message", "Equipment removed"));
@@ -110,26 +116,28 @@ public class AdminApiController {
 
     @GetMapping("/equipment")
     public ResponseEntity<?> getAllEquipment(HttpSession session) {
-        if (!isAdmin(session)) return ResponseEntity.status(403).build();
+        if (!isAdmin(session))
+            return ResponseEntity.status(403).build();
         return ResponseEntity.ok(equipmentService.getAllEquipment());
     }
 
     @PutMapping("/equipment/{equipmentId}")
     public ResponseEntity<?> updateEquipment(@PathVariable String equipmentId,
-                                             @RequestParam String name,
-                                             @RequestParam String category,
-                                             @RequestParam String description,
-                                             @RequestParam BigDecimal pricePerDay,
-                                             @RequestParam(required = false) BigDecimal pricePerHour,
-                                             @RequestParam(required = false) BigDecimal pricePerWeek,
-                                             @RequestParam(required = false) Double latitude,
-                                             @RequestParam(required = false) Double longitude,
-                                             @RequestParam String location,
-                                             @RequestParam String availabilityFrom,
-                                             @RequestParam String availabilityTo,
-                                             @RequestParam(required = false) MultipartFile image,
-                                             HttpSession session) {
-        if (!isAdmin(session)) return ResponseEntity.status(403).build();
+            @RequestParam String name,
+            @RequestParam String category,
+            @RequestParam String description,
+            @RequestParam BigDecimal pricePerDay,
+            @RequestParam(required = false) BigDecimal pricePerHour,
+            @RequestParam(required = false) BigDecimal pricePerWeek,
+            @RequestParam(required = false) Double latitude,
+            @RequestParam(required = false) Double longitude,
+            @RequestParam String location,
+            @RequestParam String availabilityFrom,
+            @RequestParam String availabilityTo,
+            @RequestParam(required = false) MultipartFile image,
+            HttpSession session) {
+        if (!isAdmin(session))
+            return ResponseEntity.status(403).build();
 
         try {
             Equipment equipment = equipmentService.getEquipmentById(equipmentId)
@@ -142,11 +150,11 @@ public class AdminApiController {
             equipment.setPricePerDay(pricePerDay);
             equipment.setPricePerWeek(pricePerWeek);
             equipment.setLocation(location);
-            
+
             if (latitude != null && longitude != null) {
-                equipment.setCoordinates(new double[]{longitude, latitude});
+                equipment.setCoordinates(new double[] { longitude, latitude });
             }
-            
+
             equipment.setAvailabilityFrom(LocalDate.parse(availabilityFrom));
             equipment.setAvailabilityTo(LocalDate.parse(availabilityTo));
 
@@ -167,13 +175,15 @@ public class AdminApiController {
 
     @GetMapping("/bookings")
     public ResponseEntity<?> getAllBookings(HttpSession session) {
-        if (!isAdmin(session)) return ResponseEntity.status(403).build();
+        if (!isAdmin(session))
+            return ResponseEntity.status(403).build();
         return ResponseEntity.ok(bookingService.getAllBookings());
     }
 
     @PostMapping("/bookings/{bookingId}/cancel")
     public ResponseEntity<?> cancelBooking(@PathVariable String bookingId, HttpSession session) {
-        if (!isAdmin(session)) return ResponseEntity.status(403).build();
+        if (!isAdmin(session))
+            return ResponseEntity.status(403).build();
         try {
             bookingService.rejectBooking(bookingId); // reusable logic
             return ResponseEntity.ok(Map.of("message", "Booking cancelled by admin"));

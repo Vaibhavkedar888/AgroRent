@@ -1,25 +1,26 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth } from '../context/useAuth';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Phone, Lock, ArrowRight, Loader } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Loader } from 'lucide-react';
 import api from '../api/axios';
 
 const LoginPage = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
-    const [phoneNumber, setPhoneNumber] = useState('');
+    const [email, setEmail] = useState('');
     const [otp, setOtp] = useState('');
     const [step, setStep] = useState('PHONE'); // PHONE or OTP
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const videoRef = useRef(null);
 
     const handleRequestOtp = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError('');
         try {
-            await api.post('/api/auth/login', null, { params: { phoneNumber } });
+            await api.post('/api/auth/login', null, { params: { email } });
             setStep('OTP');
         } catch (err) {
             setError(err.response?.data?.error || 'Failed to send OTP. Please try again.');
@@ -33,7 +34,7 @@ const LoginPage = () => {
         setLoading(true);
         setError('');
         try {
-            const user = await login(phoneNumber, otp);
+            const user = await login(email, otp);
             if (user.role === 'FARMER') navigate('/farmer/dashboard');
             else if (user.role === 'OWNER') navigate('/owner/dashboard');
             else if (user.role === 'ADMIN') navigate('/admin/dashboard');
@@ -47,15 +48,23 @@ const LoginPage = () => {
 
     return (
         <div
-            className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative"
-            style={{
-                backgroundImage: `url('https://media.istockphoto.com/id/487277894/photo/farmer-spreads-fertilizers-in-the-field-of-paddy-rice-plants.jpg?s=612x612&w=0&k=20&c=78DTfPZJ12t_3pLOxecxqNEhEYOk1ZTMhKrogLjGux8=')`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center'
-            }}
+            className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden"
         >
+            {/* Background Video */}
+            <video
+                ref={videoRef}
+                autoPlay
+                loop
+                muted
+                playsInline
+                onLoadedData={() => { if (videoRef.current) videoRef.current.currentTime = 8; }}
+                className="absolute top-0 left-0 w-full h-full object-cover z-0 brightness-[0.65]"
+            >
+                <source src="/farming-video.mp4" type="video/mp4" />
+            </video>
+
             {/* Dark Overlay */}
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-0"></div>
 
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -63,11 +72,12 @@ const LoginPage = () => {
                 className="max-w-md w-full space-y-8 bg-white/95 backdrop-blur-md p-10 rounded-3xl shadow-2xl relative z-10"
             >
                 <div className="text-center">
+                    <img src="/logo.png" alt="AgroRent Logo" className="h-16 w-auto mx-auto mb-4" />
                     <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
                         Welcome Back
                     </h2>
                     <p className="mt-2 text-sm text-gray-600">
-                        {step === 'PHONE' ? 'Sign in to access your account' : 'Enter the OTP sent to your phone'}
+                        {step === 'PHONE' ? 'Sign in to access your account' : 'Enter the OTP sent to your email'}
                     </p>
                 </div>
 
@@ -81,14 +91,14 @@ const LoginPage = () => {
                     <form className="mt-8 space-y-6" onSubmit={handleRequestOtp}>
                         <div className="rounded-md shadow-sm -space-y-px">
                             <div className="relative">
-                                <Phone className="absolute top-3 left-3 text-gray-400" size={20} />
+                                <Mail className="absolute top-3 left-3 text-gray-400" size={20} />
                                 <input
-                                    type="tel"
+                                    type="email"
                                     required
                                     className="appearance-none rounded-lg relative block w-full px-10 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                                    placeholder="Phone Number (e.g. 9876543210)"
-                                    value={phoneNumber}
-                                    onChange={(e) => setPhoneNumber(e.target.value)}
+                                    placeholder="Email Address (e.g. user@example.com)"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
                                 />
                             </div>
                         </div>

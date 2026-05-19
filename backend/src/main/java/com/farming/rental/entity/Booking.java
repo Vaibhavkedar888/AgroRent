@@ -86,10 +86,10 @@ public class Booking {
 
     // Enums for booking status
     public enum BookingStatus {
-        PENDING,      // Waiting for owner approval
-        CONFIRMED,    // Approved by owner
-        CANCELLED,    // Cancelled by farmer or owner
-        COMPLETED     // Rental period completed
+        PENDING, // Waiting for owner approval
+        CONFIRMED, // Approved by owner
+        CANCELLED, // Cancelled by farmer or owner
+        COMPLETED // Rental period completed
     }
 
     /**
@@ -112,13 +112,14 @@ public class Booking {
 
     // Mongo does not support @PrePersist in the same way as JPA.
     // Logic should be handled in Service before saving.
-    // Or use EventListeners. For simplicity, we'll ensure Service calls these methods.
+    // Or use EventListeners. For simplicity, we'll ensure Service calls these
+    // methods.
 
     /**
      * Check if booking can be cancelled
      */
     public boolean canBeCancelled() {
         return (status == BookingStatus.PENDING || status == BookingStatus.CONFIRMED) &&
-               startDate.isAfter(LocalDate.now());
+                startDate.isAfter(LocalDate.now());
     }
 }

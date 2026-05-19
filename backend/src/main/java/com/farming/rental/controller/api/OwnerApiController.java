@@ -38,19 +38,20 @@ public class OwnerApiController {
 
     @PostMapping("/equipment")
     public ResponseEntity<?> addEquipment(@RequestParam String name,
-                                          @RequestParam String category,
-                                          @RequestParam String description,
-                                          @RequestParam BigDecimal pricePerDay,
-                                          @RequestParam(required = false) BigDecimal pricePerHour,
-                                          @RequestParam(required = false) BigDecimal pricePerWeek,
-                                          @RequestParam(required = false) Double latitude,
-                                          @RequestParam(required = false) Double longitude,
-                                          @RequestParam String location,
-                                          @RequestParam String availabilityFrom,
-                                          @RequestParam String availabilityTo,
-                                          @RequestParam(required = false) MultipartFile image,
-                                          HttpSession session) {
-        if (!isOwner(session)) return ResponseEntity.status(403).build();
+            @RequestParam String category,
+            @RequestParam String description,
+            @RequestParam BigDecimal pricePerDay,
+            @RequestParam(required = false) BigDecimal pricePerHour,
+            @RequestParam(required = false) BigDecimal pricePerWeek,
+            @RequestParam(required = false) Double latitude,
+            @RequestParam(required = false) Double longitude,
+            @RequestParam String location,
+            @RequestParam String availabilityFrom,
+            @RequestParam String availabilityTo,
+            @RequestParam(required = false) MultipartFile image,
+            HttpSession session) {
+        if (!isOwner(session))
+            return ResponseEntity.status(403).build();
 
         try {
             User owner = (User) session.getAttribute("loggedInUser");
@@ -62,11 +63,11 @@ public class OwnerApiController {
             equipment.setPricePerDay(pricePerDay);
             equipment.setPricePerWeek(pricePerWeek);
             equipment.setLocation(location);
-            
+
             if (latitude != null && longitude != null) {
-                equipment.setCoordinates(new double[]{longitude, latitude});
+                equipment.setCoordinates(new double[] { longitude, latitude });
             }
-            
+
             equipment.setAvailabilityFrom(LocalDate.parse(availabilityFrom));
             equipment.setAvailabilityTo(LocalDate.parse(availabilityTo));
             equipment.setOwner(owner);
@@ -88,20 +89,21 @@ public class OwnerApiController {
 
     @PutMapping("/equipment/{equipmentId}")
     public ResponseEntity<?> updateEquipment(@PathVariable String equipmentId,
-                                             @RequestParam String name,
-                                             @RequestParam String category,
-                                             @RequestParam String description,
-                                             @RequestParam BigDecimal pricePerDay,
-                                             @RequestParam(required = false) BigDecimal pricePerHour,
-                                             @RequestParam(required = false) BigDecimal pricePerWeek,
-                                             @RequestParam(required = false) Double latitude,
-                                             @RequestParam(required = false) Double longitude,
-                                             @RequestParam String location,
-                                             @RequestParam String availabilityFrom,
-                                             @RequestParam String availabilityTo,
-                                             @RequestParam(required = false) MultipartFile image,
-                                             HttpSession session) {
-        if (!isOwner(session)) return ResponseEntity.status(403).build();
+            @RequestParam String name,
+            @RequestParam String category,
+            @RequestParam String description,
+            @RequestParam BigDecimal pricePerDay,
+            @RequestParam(required = false) BigDecimal pricePerHour,
+            @RequestParam(required = false) BigDecimal pricePerWeek,
+            @RequestParam(required = false) Double latitude,
+            @RequestParam(required = false) Double longitude,
+            @RequestParam String location,
+            @RequestParam String availabilityFrom,
+            @RequestParam String availabilityTo,
+            @RequestParam(required = false) MultipartFile image,
+            HttpSession session) {
+        if (!isOwner(session))
+            return ResponseEntity.status(403).build();
 
         try {
             User owner = (User) session.getAttribute("loggedInUser");
@@ -119,11 +121,11 @@ public class OwnerApiController {
             equipment.setPricePerDay(pricePerDay);
             equipment.setPricePerWeek(pricePerWeek);
             equipment.setLocation(location);
-            
+
             if (latitude != null && longitude != null) {
-                equipment.setCoordinates(new double[]{longitude, latitude});
+                equipment.setCoordinates(new double[] { longitude, latitude });
             }
-            
+
             equipment.setAvailabilityFrom(LocalDate.parse(availabilityFrom));
             equipment.setAvailabilityTo(LocalDate.parse(availabilityTo));
 
@@ -144,7 +146,8 @@ public class OwnerApiController {
 
     @DeleteMapping("/equipment/{equipmentId}")
     public ResponseEntity<?> deleteEquipment(@PathVariable String equipmentId, HttpSession session) {
-        if (!isOwner(session)) return ResponseEntity.status(403).build();
+        if (!isOwner(session))
+            return ResponseEntity.status(403).build();
 
         try {
             User owner = (User) session.getAttribute("loggedInUser");
@@ -164,7 +167,8 @@ public class OwnerApiController {
 
     @GetMapping("/dashboard")
     public ResponseEntity<?> getDashboardStats(HttpSession session) {
-        if (!isOwner(session)) return ResponseEntity.status(403).build();
+        if (!isOwner(session))
+            return ResponseEntity.status(403).build();
 
         User owner = (User) session.getAttribute("loggedInUser");
         List<Equipment> equipment = equipmentService.getOwnerEquipment(owner);
@@ -172,24 +176,24 @@ public class OwnerApiController {
 
         // Calculate total earnings
         BigDecimal totalEarnings = bookings.stream()
-            .filter(b -> b.getStatus() == Booking.BookingStatus.COMPLETED 
-                    || b.getStatus() == Booking.BookingStatus.CONFIRMED)
-            .map(Booking::getTotalAmount)
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .filter(b -> b.getStatus() == Booking.BookingStatus.COMPLETED
+                        || b.getStatus() == Booking.BookingStatus.CONFIRMED)
+                .map(Booking::getTotalAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         Map<String, Object> stats = Map.of(
-            "totalEarnings", totalEarnings,
-            "equipmentCount", equipment.size(),
-            "bookings", bookings,
-            "equipment", equipment
-        );
+                "totalEarnings", totalEarnings,
+                "equipmentCount", equipment.size(),
+                "bookings", bookings,
+                "equipment", equipment);
 
         return ResponseEntity.ok(stats);
     }
 
     @PostMapping("/bookings/{bookingId}/approve")
     public ResponseEntity<?> approveBooking(@PathVariable String bookingId, HttpSession session) {
-        if (!isOwner(session)) return ResponseEntity.status(403).build();
+        if (!isOwner(session))
+            return ResponseEntity.status(403).build();
         try {
             return ResponseEntity.ok(bookingService.approveBooking(bookingId));
         } catch (Exception e) {
@@ -199,7 +203,8 @@ public class OwnerApiController {
 
     @PostMapping("/bookings/{bookingId}/reject")
     public ResponseEntity<?> rejectBooking(@PathVariable String bookingId, HttpSession session) {
-        if (!isOwner(session)) return ResponseEntity.status(403).build();
+        if (!isOwner(session))
+            return ResponseEntity.status(403).build();
         try {
             return ResponseEntity.ok(bookingService.rejectBooking(bookingId));
         } catch (Exception e) {
@@ -209,7 +214,8 @@ public class OwnerApiController {
 
     @PostMapping("/bookings/{bookingId}/complete")
     public ResponseEntity<?> completeBooking(@PathVariable String bookingId, HttpSession session) {
-        if (!isOwner(session)) return ResponseEntity.status(403).build();
+        if (!isOwner(session))
+            return ResponseEntity.status(403).build();
         try {
             return ResponseEntity.ok(bookingService.completeBooking(bookingId));
         } catch (Exception e) {
@@ -219,7 +225,8 @@ public class OwnerApiController {
 
     @PostMapping("/bookings/{bookingId}/cancel")
     public ResponseEntity<?> ownerCancelBooking(@PathVariable String bookingId, HttpSession session) {
-        if (!isOwner(session)) return ResponseEntity.status(403).build();
+        if (!isOwner(session))
+            return ResponseEntity.status(403).build();
         try {
             // Reusing reject logic or direct cancel
             return ResponseEntity.ok(bookingService.rejectBooking(bookingId));

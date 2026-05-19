@@ -12,12 +12,7 @@ export const AuthProvider = ({ children }) => {
 
     const checkAuth = async () => {
         try {
-            // We need an endpoint to check current session.
-            // Ideally backend should have /api/auth/me
-            // For now we assume if we make a request and get 401, we are logged out.
-            // But we will implement a proper check later.
-            // Skipping for now, defaulting to null.
-            const response = await api.get('/api/auth/me'); // We need to add this endpoint
+            const response = await api.get('/api/auth/me');
             setUser(response.data);
         } catch (error) {
             setUser(null);
@@ -26,9 +21,9 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const login = async (phoneNumber, otp) => {
+    const login = async (email, otp) => {
         const response = await api.post('/api/auth/verify-otp', null, {
-            params: { phoneNumber, otp }
+            params: { email, otp }
         });
         // The backend redirects, but for REST API we want JSON.
         // We need to refactor backend to return JSON for API calls.
@@ -43,7 +38,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, loading }}>
+        <AuthContext.Provider value={{ user, setUser, login, logout, loading }}>
             {children}
         </AuthContext.Provider>
     );

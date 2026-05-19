@@ -2,50 +2,54 @@ import { motion } from 'framer-motion';
 import { Tractor, Sprout, Users, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/useLanguage';
+import { useRef } from 'react';
 
 const LandingPage = () => {
     const { t } = useLanguage();
+    const videoRef = useRef(null);
 
     return (
         <div className="min-h-screen bg-white">
             {/* Hero Section */}
-            <div className="relative overflow-hidden bg-primary-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+            <div className="relative overflow-hidden min-h-[90vh] flex items-center justify-center">
+                <img
+                    src="bd.jpg"
+                    alt="Farming Background"
+                    className="absolute top-0 left-0 w-full h-full object-cover z-0 brightness-[0.65]"
+                />
+                <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
                     <div className="text-center">
                         <motion.h1
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="text-5xl font-extrabold text-gray-900 tracking-tight sm:text-6xl"
+                            className="text-5xl font-black text-white tracking-tight sm:text-7xl drop-shadow-2xl"
                         >
-                            {t('heroTitle').split(' ').slice(0, -2).join(' ')} <span className="text-primary-600">{t('heroTitle').split(' ').slice(-2).join(' ')}</span>
+                            Modern Farming <span className="text-primary-400">Equipment Rental</span>
                         </motion.h1>
                         <motion.p
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.2 }}
-                            className="mt-6 max-w-2xl mx-auto text-xl text-gray-600 font-light"
+                            className="mt-8 max-w-3xl mx-auto text-xl text-gray-100 font-medium leading-relaxed drop-shadow-lg"
                         >
-                            {t('heroSubtitle')}
+                            Connect with equipment owners, rent high-quality machinery, and maximize your yield. 
+                            <span className="block mt-2 text-primary-300 font-bold">The smart choice for modern Indian farmers.</span>
                         </motion.p>
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.4 }}
-                            className="mt-10 flex justify-center gap-4"
+                            className="mt-12 flex justify-center gap-6"
                         >
-                            <Link to="/login" className="px-8 py-3 rounded-full bg-primary-600 text-white font-semibold hover:bg-primary-700 transition shadow-lg flex items-center gap-2">
-                                {t('getStarted')} <ArrowRight size={20} />
+                            <Link to="/login" className="px-10 py-4 rounded-full bg-primary-600 text-white font-bold hover:bg-primary-700 transition transform hover:scale-105 shadow-[0_10px_20px_rgba(20,122,91,0.3)] flex items-center gap-3">
+                                Get Started <ArrowRight size={22} />
                             </Link>
-                            <Link to="/about" className="px-8 py-3 rounded-full bg-white text-primary-600 font-semibold border border-primary-200 hover:bg-primary-50 transition shadow-sm">
-                                {t('learnMore')}
+                            <Link to="/about" className="px-10 py-4 rounded-full bg-white/10 backdrop-blur-md text-white font-bold border border-white/30 hover:bg-white/20 transition transform hover:scale-105 shadow-xl">
+                                Learn More
                             </Link>
                         </motion.div>
                     </div>
                 </div>
-
-                {/* Background blobs */}
-                <div className="absolute top-0 right-0 -mt-20 -mr-20 w-96 h-96 bg-primary-100 rounded-full blur-3xl opacity-50 -z-10"></div>
-                <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-96 h-96 bg-secondary-100 rounded-full blur-3xl opacity-50 -z-10"></div>
             </div>
 
             {/* Features */}

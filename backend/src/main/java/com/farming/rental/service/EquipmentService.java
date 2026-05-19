@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 
 /**
  * Service for Equipment management
@@ -26,8 +28,9 @@ public class EquipmentService {
     /**
      * Get all available equipment
      */
+    @Cacheable(value = "equipmentList")
     public List<Equipment> getAvailableEquipment() {
-        return equipmentRepository.findByIsAvailableAndIsApprovedTrue(true);
+        return equipmentRepository.findByIsAvailableAndIsApprovedTrueOrderByCreatedAtDesc(true);
     }
 
     public List<Equipment> getNearestEquipment(double lat, double lng) {
@@ -38,8 +41,9 @@ public class EquipmentService {
     /**
      * Get equipment by category
      */
+    @Cacheable(value = "equipmentList")
     public List<Equipment> getEquipmentByCategory(String category) {
-        return equipmentRepository.findAvailableByCategory(category);
+        return equipmentRepository.findAvailableByCategoryOrderByCreatedAtDesc(category);
     }
 
     /**
@@ -59,6 +63,7 @@ public class EquipmentService {
     /**
      * Add new equipment
      */
+    @CacheEvict(value = "equipmentList", allEntries = true)
     public Equipment addEquipment(Equipment equipment) {
         log.info("Adding new equipment: {}", equipment.getName());
         equipment.setIsApproved(false); // Requires admin approval
@@ -69,6 +74,7 @@ public class EquipmentService {
     /**
      * Update equipment
      */
+    @CacheEvict(value = "equipmentList", allEntries = true)
     public Equipment updateEquipment(Equipment equipment) {
         log.info("Updating equipment: {}", equipment.getId());
         return equipmentRepository.save(equipment);
@@ -77,6 +83,7 @@ public class EquipmentService {
     /**
      * Delete equipment
      */
+    @CacheEvict(value = "equipmentList", allEntries = true)
     public void deleteEquipment(String id) {
         log.info("Deleting equipment: {}", id);
         equipmentRepository.deleteById(id);
@@ -85,6 +92,7 @@ public class EquipmentService {
     /**
      * Approve equipment (Admin only)
      */
+    @CacheEvict(value = "equipmentList", allEntries = true)
     public Equipment approveEquipment(String id) {
         log.info("Approving equipment: {}", id);
         Equipment equipment = equipmentRepository.findById(id)
@@ -107,6 +115,7 @@ public class EquipmentService {
     /**
      * Get all equipment (Admin only)
      */
+    @Cacheable(value = "equipmentList")
     public List<Equipment> getAllEquipment() {
         return equipmentRepository.findAll();
     }

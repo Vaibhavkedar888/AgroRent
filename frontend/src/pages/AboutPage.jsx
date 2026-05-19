@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Target, Users, ShieldCheck, Heart, Tractor, Globe, Sprout, Award } from 'lucide-react';
+import heroBanner from '../assets/maharashtra_farming_banner.png';
 
 const AboutPage = () => {
     const fadeIn = {
@@ -16,9 +17,9 @@ const AboutPage = () => {
     ];
 
     const stats = [
-        { value: "50k+", label: "Farmers Empowered" },
-        { value: "10k+", label: "Machines Listed" },
-        { value: "15+", label: "States Covered" },
+        { value: "100+", label: "Farmers Empowered" },
+        { value: "60+", label: "Machines Listed" },
+        { value: "10+", label: "States Covered" },
         { value: "4.8/5", label: "Happy Users" }
     ];
 
@@ -28,7 +29,7 @@ const AboutPage = () => {
             <section className="relative h-[60vh] flex items-center justify-center overflow-hidden bg-gray-900 text-white">
                 <div className="absolute inset-0 z-0 opacity-40">
                     <img
-                        src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"
+                        src={heroBanner}
                         alt="Farming Banner"
                         className="w-full h-full object-cover"
                     />
@@ -45,7 +46,7 @@ const AboutPage = () => {
                         transition={{ delay: 0.2 }}
                         className="text-xl text-gray-300 font-medium leading-relaxed"
                     >
-                        AgroLease is more than a rental platform—it's a movement to modernize
+                        AgroRent is more than a rental platform—it's a movement to modernize
                         agriculture through technology and community-driven machinery sharing.
                     </motion.p>
                 </div>
@@ -58,7 +59,7 @@ const AboutPage = () => {
                         <h2 className="text-3xl font-bold text-gray-900 mb-6">Seeds of Innovation</h2>
                         <div className="space-y-4 text-gray-600 leading-relaxed font-medium text-lg">
                             <p>
-                                Founded in 2024, AgroLease (Krushak) emerged from a simple observation:
+                                Founded in 2026, AgroRent emerged from a simple observation:
                                 most small-scale farmers lack the capital to buy high-end machinery
                                 like harvesters and high-power tractors, while existing owners
                                 have equipment sitting idle for months.
@@ -90,7 +91,7 @@ const AboutPage = () => {
             <section className="py-24 bg-gray-50 px-4">
                 <div className="max-w-7xl mx-auto text-center mb-16">
                     <h2 className="text-4xl font-black text-gray-900 mb-4 tracking-tight uppercase">Our Core Values</h2>
-                    <p className="text-gray-500 font-medium">The principles that drive every decision at Krushak</p>
+                    <p className="text-gray-500 font-medium">The principles that drive every decision at AgroRent</p>
                 </div>
                 <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
                     {values.map((v, i) => (

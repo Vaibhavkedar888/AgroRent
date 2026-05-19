@@ -1,28 +1,115 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary-50: #f0fdf4;
-  --color-primary-100: #dcfce7;
-  --color-primary-200: #bbf7d0;
-  --color-primary-300: #86efac;
-  --color-primary-400: #4ade80;
-  --color-primary-500: #22c55e;
-  --color-primary-600: #16a34a;
-  --color-primary-700: #15803d;
-  --color-primary-800: #166534;
-  --color-primary-900: #14532d;
-  --color-secondary-50: #fefce8;
-  --color-secondary-100: #fef9c3;
-  --color-secondary-200: #fef08a;
-  --color-secondary-300: #fde047;
-  --color-secondary-400: #facc15;
-  --color-secondary-500: #eab308;
-  --color-secondary-600: #ca8a04;
-  --color-secondary-700: #a16207;
-  --color-secondary-800: #854d0e;
-  --color-secondary-900: #713f12;
+  /* Primary: Deep Emerald-Teal — strong, natural, trustworthy */
+  --color-primary-50: #edfaf5;
+  --color-primary-100: #d0f3e4;
+  --color-primary-200: #a3e6cc;
+  --color-primary-300: #68d0ad;
+  --color-primary-400: #38b48d;
+  --color-primary-500: #1e9671;
+  --color-primary-600: #147a5b;
+  --color-primary-700: #106149;
+  --color-primary-800: #0d4d3b;
+  --color-primary-900: #083d2f;
+
+  /* Secondary: Rich Amber-Gold — warmth, harvest, premium */
+  --color-secondary-50: #fffbeb;
+  --color-secondary-100: #fef3c7;
+  --color-secondary-200: #fde68a;
+  --color-secondary-300: #fcd34d;
+  --color-secondary-400: #f59e0b;
+  --color-secondary-500: #d97706;
+  --color-secondary-600: #b45309;
+  --color-secondary-700: #92400e;
+  --color-secondary-800: #78350f;
+  --color-secondary-900: #5f2800;
+
+  /* Accent: Earthy Sienna — grounding, soil, trust */
+  --color-accent-50: #fdf4ef;
+  --color-accent-100: #fbe5d5;
+  --color-accent-200: #f6c8aa;
+  --color-accent-300: #eda47a;
+  --color-accent-400: #e07c4a;
+  --color-accent-500: #c4612e;
+  --color-accent-600: #a04b24;
+  --color-accent-700: #7e3a1c;
+  --color-accent-800: #5e2c16;
+  --color-accent-900: #422010;
 }
 
 body {
   @apply bg-gray-50 text-gray-900;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ===== DARK MODE ===== */
+html.dark body {
+  @apply bg-gray-950 text-gray-100;
+}
+
+html.dark .bg-white {
+  @apply bg-gray-900;
+}
+
+html.dark .bg-white\/95 {
+  background-color: rgba(17, 24, 39, 0.97) !important;
+}
+
+html.dark .bg-gray-50 {
+  @apply bg-gray-900;
+}
+
+html.dark .bg-gray-100 {
+  @apply bg-gray-800;
+}
+
+html.dark .text-gray-900 {
+  @apply text-gray-100;
+}
+
+html.dark .text-gray-700 {
+  @apply text-gray-300;
+}
+
+html.dark .text-gray-600 {
+  @apply text-gray-400;
+}
+
+html.dark .text-gray-500 {
+  @apply text-gray-400;
+}
+
+html.dark .border-gray-100 {
+  @apply border-gray-700;
+}
+
+html.dark .border-gray-200 {
+  @apply border-gray-700;
+}
+
+html.dark .border-gray-300 {
+  @apply border-gray-600;
+}
+
+html.dark .border-primary-100 {
+  @apply border-primary-900;
+}
+
+html.dark .shadow-sm,
+html.dark .shadow-md,
+html.dark .shadow-xl,
+html.dark .shadow-2xl {
+  --tw-shadow-color: rgba(0, 0, 0, 0.6);
+}
+
+html.dark input,
+html.dark select,
+html.dark textarea {
+  @apply bg-gray-800 text-gray-100 border-gray-600;
+}
+
+html.dark .hover\:bg-gray-50:hover {
+  @apply bg-gray-800;
 }

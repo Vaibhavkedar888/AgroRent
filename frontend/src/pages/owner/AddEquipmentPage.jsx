@@ -122,11 +122,35 @@ const AddEquipmentPage = () => {
                                     onChange={handleChange}
                                 >
                                     <option value="Tractor">Tractor</option>
+                                    <option value="Rotavator">Rotavator</option>
                                     <option value="Harvester">Harvester</option>
-                                    <option value="Planter">Planter</option>
-                                    <option value="Tillage">Tillage</option>
-                                    <option value="Irrigation">Irrigation</option>
-                                    <option value="Other">Other</option>
+                                    <option value="Cultivator">Cultivator</option>
+                                    <option value="Plough">Plough (MB/Disc)</option>
+                                    <option value="Power Tiller">Power Tiller</option>
+                                    <option value="Land Leveler">Laser Land Leveler</option>
+
+                                    <option value="Seed Drill">Seed Drill</option>
+                                    <option value="Planter">Planter (Pneumatic/Manual)</option>
+                                    <option value="Happy Seeder">Happy Seeder</option>
+                                    <option value="Rice Transplanter">Rice Transplanter</option>
+
+                                    <option value="Water Pump">Water Pump (Diesel/Solar)</option>
+                                    <option value="Boom Sprayer">Tractor Mounted Boom Sprayer</option>
+                                    <option value="Knapsack Sprayer">Power Knapsack Sprayer</option>
+                                    <option value="Agri Drone">Agriculture Spraying Drone</option>
+
+                                    <option value="Combine Harvester">Combine Harvester</option>
+                                    <option value="Multi Crop Thresher">Multi-Crop Thresher</option>
+                                    <option value="Reaper">Reaper Binder</option>
+                                    <option value="Maize Sheller">Maize Sheller</option>
+
+                                    <option value="Trolley">Tractor Trolley/Trailer</option>
+                                    <option value="Baler">Straw Baler</option>
+                                    <option value="Chaff Cutter">Electric Chaff Cutter</option>
+                                    <option value="Grain Dryer">Grain Dryer</option>
+                                    <option value="Sprayer">Sprayer</option>
+                                    <option value="Drone">Drone</option>
+                                    <option value="other">Other</option>
                                 </select>
                             </div>
 

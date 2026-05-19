@@ -29,11 +29,11 @@ public class AuthApiController {
     private final UserService userService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> requestOTP(@RequestParam String phoneNumber, HttpSession session) {
-        log.info("API OTP request for: {}", phoneNumber);
+    public ResponseEntity<?> requestOTP(@RequestParam String email, HttpSession session) {
+        log.info("API OTP request for: {}", email);
         try {
-            otpService.generateOTP(phoneNumber);
-            session.setAttribute("tempPhoneNumber", phoneNumber);
+            otpService.generateOTP(email);
+            session.setAttribute("tempEmail", email);
             return ResponseEntity.ok(Map.of("message", "OTP sent successfully"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -41,13 +41,13 @@ public class AuthApiController {
     }
 
     @PostMapping("/verify-otp")
-    public ResponseEntity<?> verifyOTP(@RequestParam String phoneNumber,
+    public ResponseEntity<?> verifyOTP(@RequestParam String email,
                                        @RequestParam String otp,
                                        HttpSession session,
                                        HttpServletRequest request,
                                        HttpServletResponse response) {
-        log.info("API OTP verification for: {}", phoneNumber);
-        Optional<User> user = otpService.verifyOTP(phoneNumber, otp);
+        log.info("API OTP verification for: {}", email);
+        Optional<User> user = otpService.verifyOTP(email, otp);
 
         if (user.isPresent()) {
             User loggedInUser = user.get();
@@ -64,7 +64,7 @@ public class AuthApiController {
             String roleName = "ROLE_" + loggedInUser.getRole().name();
             var authorities = java.util.List.of(new SimpleGrantedAuthority(roleName));
             UsernamePasswordAuthenticationToken auth =
-                    new UsernamePasswordAuthenticationToken(loggedInUser.getPhoneNumber(), null, authorities);
+                    new UsernamePasswordAuthenticationToken(loggedInUser.getEmail(), null, authorities);
             SecurityContextHolder.getContext().setAuthentication(auth);
             
             HttpSessionSecurityContextRepository repo = new HttpSessionSecurityContextRepository();
@@ -79,11 +79,11 @@ public class AuthApiController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody UserRegistrationDTO dto) {
         try {
-            if (userService.getUserByPhoneNumber(dto.getPhoneNumber()).isPresent()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "User already exists"));
+            if (userService.getUserByEmail(dto.getEmail()).isPresent()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Email already registered"));
             }
             User user = userService.registerUser(dto);
-            otpService.generateOTP(user.getPhoneNumber());
+            otpService.generateOTP(user.getEmail());
             return ResponseEntity.ok(Map.of("message", "Registered successfully. Please verify OTP.", "user", user));
         } catch (Exception e) {
             log.error("Registration failed", e);

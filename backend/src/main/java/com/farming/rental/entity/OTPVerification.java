@@ -25,8 +25,8 @@ public class OTPVerification {
     private String id;
 
     @Indexed(unique = true)
-    @Field("phone_number")
-    private String phoneNumber;
+    @Field("email")
+    private String email;
 
     @Field("otp_code")
     private String otpCode; // 6-digit OTP
