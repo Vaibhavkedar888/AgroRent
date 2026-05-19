@@ -4,6 +4,7 @@ import { Search, Filter, Tractor, MapPin } from 'lucide-react';
 import { useLanguage } from '../context/useLanguage';
 import EquipmentService from '../api/equipmentService';
 import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../api/axios';
 
 const EquipmentPage = () => {
     const { t } = useLanguage();
@@ -152,7 +153,7 @@ const EquipmentPage = () => {
                                 <div className="h-48 bg-gray-200 relative">
                                     {/* Placeholder image if none */}
                                     {item.imageUrl ? (
-                                        <img src={`http://localhost:8080${item.imageUrl}`} alt={item.name} className="w-full h-full object-cover" />
+                                        <img src={`${API_BASE_URL}${item.imageUrl}`} alt={item.name} className="w-full h-full object-cover" />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-gray-400">
                                             <Tractor size={48} />

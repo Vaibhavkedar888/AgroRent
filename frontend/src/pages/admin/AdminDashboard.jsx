@@ -3,7 +3,7 @@ import { useAuth } from '../../context/useAuth';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Users, Tractor, DollarSign, Calendar, Check, X, Shield, ShieldOff, AlertCircle, Pencil, Trash2 } from 'lucide-react';
-import api from '../../api/axios';
+import api, { API_BASE_URL } from '../../api/axios';
 
 const AdminDashboard = () => {
     const { user } = useAuth();
@@ -135,7 +135,7 @@ const AdminDashboard = () => {
                                             <div key={eq.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-primary-200 transition">
                                                 <div className="flex items-center gap-4">
                                                     <div className="h-12 w-12 rounded-lg bg-white flex items-center justify-center border border-gray-200 overflow-hidden">
-                                                        {eq.imageUrl ? <img src={`http://localhost:8080${eq.imageUrl}`} alt="" className="h-full w-full object-cover" /> : <Tractor className="text-gray-400" size={24} />}
+                                                        {eq.imageUrl ? <img src={`${API_BASE_URL}${eq.imageUrl}`} alt="" className="h-full w-full object-cover" /> : <Tractor className="text-gray-400" size={24} />}
                                                     </div>
                                                     <div>
                                                         <h3 className="font-semibold text-gray-900">{eq.name}</h3>
@@ -256,7 +256,7 @@ const AdminDashboard = () => {
                                     {allEquipment.map((eq) => (
                                         <div key={eq.id} className="p-4 border border-gray-100 rounded-2xl flex items-center gap-4 bg-gray-50/30 hover:bg-white hover:shadow-md transition group">
                                             <div className="h-14 w-14 rounded-xl bg-white border border-gray-100 flex items-center justify-center overflow-hidden">
-                                                {eq.imageUrl ? <img src={`http://localhost:8080${eq.imageUrl}`} className="object-cover h-full w-full" alt="" /> : <Tractor className="text-gray-400" size={20} />}
+                                                {eq.imageUrl ? <img src={`${API_BASE_URL}${eq.imageUrl}`} className="object-cover h-full w-full" alt="" /> : <Tractor className="text-gray-400" size={20} />}
                                             </div>
                                             <div className="flex-grow">
                                                 <h4 className="font-bold text-gray-900 leading-tight">{eq.name}</h4>

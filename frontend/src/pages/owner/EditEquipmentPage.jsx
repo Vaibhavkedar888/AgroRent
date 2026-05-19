@@ -4,6 +4,7 @@ import { useAuth } from '../../context/useAuth';
 import { motion } from 'framer-motion';
 import { Upload, Loader, Save, ArrowLeft, MapPin } from 'lucide-react';
 import EquipmentService from '../../api/equipmentService';
+import { API_BASE_URL } from '../../api/axios';
 
 const EditEquipmentPage = () => {
     const { user } = useAuth();
@@ -50,7 +51,7 @@ const EditEquipmentPage = () => {
                     image: null
                 });
                 if (data.imageUrl) {
-                    setImagePreview(`http://localhost:8080${data.imageUrl}`);
+                    setImagePreview(`${API_BASE_URL}${data.imageUrl}`);
                 }
             } catch (err) {
                 setError('Failed to fetch equipment details');

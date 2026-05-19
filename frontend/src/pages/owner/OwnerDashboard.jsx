@@ -3,7 +3,7 @@ import { useAuth } from '../../context/useAuth';
 import { motion } from 'framer-motion';
 import { Plus, Tractor, DollarSign, List, Check, X, Clock, MessageSquare, Pencil, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import api from '../../api/axios';
+import api, { API_BASE_URL } from '../../api/axios';
 import ChatModal from '../../components/ChatModal';
 
 const OwnerDashboard = () => {
@@ -144,7 +144,7 @@ const OwnerDashboard = () => {
                                 {myEquipment.length > 0 ? myEquipment.map(eq => (
                                     <div key={eq.id} className="p-4 border border-gray-100 rounded-2xl flex items-center gap-4 hover:border-primary-100 hover:shadow-md transition group">
                                         <div className="h-16 w-16 rounded-xl bg-gray-50 flex items-center justify-center overflow-hidden border border-gray-100">
-                                            {eq.imageUrl ? <img src={`http://localhost:8080${eq.imageUrl}`} className="object-cover h-full w-full" alt="" /> : <Tractor className="text-gray-400" />}
+                                            {eq.imageUrl ? <img src={`${API_BASE_URL}${eq.imageUrl}`} className="object-cover h-full w-full" alt="" /> : <Tractor className="text-gray-400" />}
                                         </div>
                                         <div className="flex-grow">
                                             <h4 className="font-bold text-gray-900 leading-tight">{eq.name}</h4>

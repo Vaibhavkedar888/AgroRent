@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MapPin, Calendar, Clock, ArrowLeft, Loader, CheckCircle, AlertCircle, Tractor, Star, MessageSquare } from 'lucide-react';
+import { API_BASE_URL } from '../api/axios';
 import { useLanguage } from '../context/useLanguage';
 import EquipmentService from '../api/equipmentService';
 import ReviewService from '../api/reviewService';
@@ -178,7 +179,7 @@ const EquipmentDetailsPage = () => {
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                             <div className="h-[400px] bg-gray-100 relative">
                                 {equipment.imageUrl ? (
-                                    <img src={`http://localhost:8080${equipment.imageUrl}`} alt={equipment.name} className="w-full h-full object-cover" />
+                                    <img src={`${API_BASE_URL}${equipment.imageUrl}`} alt={equipment.name} className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center text-gray-300"><Tractor size={100} /></div>
                                 )}
