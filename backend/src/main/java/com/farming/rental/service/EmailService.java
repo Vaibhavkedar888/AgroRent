@@ -9,6 +9,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.scheduling.annotation.Async;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +21,7 @@ public class EmailService {
     @Value("${spring.mail.username}")
     private String fromEmail;
 
+    @Async
     public void sendOTP(String toEmail, String otpCode) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
@@ -37,6 +39,7 @@ public class EmailService {
         }
     }
 
+    @Async
     public void sendEmailWithAttachment(String toEmail, String subject, String body, byte[] attachment,
             String attachmentName) {
         try {
